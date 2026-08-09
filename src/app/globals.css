@@ -1,26 +1,254 @@
 @import "tailwindcss";
 
+/* FlowDesk uses class-based dark mode, driven by next-themes. */
+@custom-variant dark (&:is(.dark *));
+
+/*
+  FlowDesk design system
+  ----------------------
+  Brand: "Iris" — a premium indigo-violet, used with restraint.
+  Neutrals: cool slate, warmed slightly so surfaces feel calm, not clinical.
+  Data/metrics use the mono face as a functional signature.
+  All colors are oklch for perceptually even light/dark pairs.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.65rem;
+
+  --background: oklch(0.99 0.003 265);
+  --foreground: oklch(0.22 0.02 265);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 265);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 265);
+
+  --primary: oklch(0.54 0.22 277);
+  --primary-foreground: oklch(0.99 0.01 277);
+
+  --secondary: oklch(0.965 0.008 265);
+  --secondary-foreground: oklch(0.3 0.02 265);
+
+  --muted: oklch(0.97 0.005 265);
+  --muted-foreground: oklch(0.55 0.02 265);
+
+  --accent: oklch(0.955 0.02 277);
+  --accent-foreground: oklch(0.34 0.06 277);
+
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.99 0.01 25);
+
+  --success: oklch(0.6 0.14 155);
+  --success-foreground: oklch(0.99 0.01 155);
+
+  --warning: oklch(0.79 0.15 78);
+  --warning-foreground: oklch(0.28 0.06 78);
+
+  --info: oklch(0.6 0.15 240);
+  --info-foreground: oklch(0.99 0.01 240);
+
+  --border: oklch(0.92 0.005 265);
+  --input: oklch(0.92 0.005 265);
+  --ring: oklch(0.54 0.22 277);
+
+  --chart-1: oklch(0.54 0.22 277);
+  --chart-2: oklch(0.62 0.15 200);
+  --chart-3: oklch(0.6 0.14 155);
+  --chart-4: oklch(0.79 0.15 78);
+  --chart-5: oklch(0.62 0.2 15);
+
+  --sidebar: oklch(0.985 0.004 265);
+  --sidebar-foreground: oklch(0.3 0.02 265);
+  --sidebar-primary: oklch(0.54 0.22 277);
+  --sidebar-primary-foreground: oklch(0.99 0.01 277);
+  --sidebar-accent: oklch(0.955 0.02 277);
+  --sidebar-accent-foreground: oklch(0.34 0.06 277);
+  --sidebar-border: oklch(0.92 0.005 265);
+  --sidebar-ring: oklch(0.54 0.22 277);
 }
 
+.dark {
+  --background: oklch(0.18 0.015 265);
+  --foreground: oklch(0.95 0.005 265);
+
+  --card: oklch(0.215 0.017 265);
+  --card-foreground: oklch(0.95 0.005 265);
+
+  --popover: oklch(0.215 0.017 265);
+  --popover-foreground: oklch(0.95 0.005 265);
+
+  --primary: oklch(0.68 0.19 278);
+  --primary-foreground: oklch(0.17 0.03 278);
+
+  --secondary: oklch(0.27 0.02 265);
+  --secondary-foreground: oklch(0.92 0.006 265);
+
+  --muted: oklch(0.25 0.018 265);
+  --muted-foreground: oklch(0.71 0.02 265);
+
+  --accent: oklch(0.31 0.04 278);
+  --accent-foreground: oklch(0.92 0.02 278);
+
+  --destructive: oklch(0.65 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+
+  --success: oklch(0.68 0.14 158);
+  --success-foreground: oklch(0.16 0.03 158);
+
+  --warning: oklch(0.82 0.15 80);
+  --warning-foreground: oklch(0.24 0.05 80);
+
+  --info: oklch(0.68 0.14 240);
+  --info-foreground: oklch(0.16 0.03 240);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.68 0.19 278);
+
+  --chart-1: oklch(0.68 0.19 278);
+  --chart-2: oklch(0.7 0.14 200);
+  --chart-3: oklch(0.68 0.14 158);
+  --chart-4: oklch(0.82 0.15 80);
+  --chart-5: oklch(0.7 0.19 15);
+
+  --sidebar: oklch(0.205 0.016 265);
+  --sidebar-foreground: oklch(0.88 0.008 265);
+  --sidebar-primary: oklch(0.68 0.19 278);
+  --sidebar-primary-foreground: oklch(0.17 0.03 278);
+  --sidebar-accent: oklch(0.31 0.04 278);
+  --sidebar-accent-foreground: oklch(0.92 0.02 278);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.68 0.19 278);
+}
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Named animations, so components stay dependency-free (no animate plugin). */
+  --animate-pop-in: pop-in 0.15s ease-out;
+  --animate-fade-in: fade-in 0.2s ease-out;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Tabular figures keep metrics and tables from shifting as values change. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* Subtle scrollbars that respect the theme, used in sidebars and panels. */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
