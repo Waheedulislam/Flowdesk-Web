@@ -26,7 +26,6 @@ export const navSections: NavSection[] = [
         title: "Projects",
         href: "/projects",
         icon: FolderKanban,
-        disabled: true,
       },
       { title: "Tasks", href: "/tasks", icon: ListChecks, disabled: true },
       { title: "Workspace", href: "/workspace", icon: Users },
