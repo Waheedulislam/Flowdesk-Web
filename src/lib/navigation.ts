@@ -22,15 +22,25 @@ export const navSections: NavSection[] = [
   {
     items: [
       { title: "Dashboard", href: "/", icon: LayoutDashboard },
-      { title: "Projects", href: "/projects", icon: FolderKanban, disabled: true },
+      {
+        title: "Projects",
+        href: "/projects",
+        icon: FolderKanban,
+        disabled: true,
+      },
       { title: "Tasks", href: "/tasks", icon: ListChecks, disabled: true },
-      { title: "Workspace", href: "/workspace", icon: Users, disabled: true },
+      { title: "Workspace", href: "/workspace", icon: Users },
     ],
   },
   {
     label: "Insights",
     items: [
-      { title: "Analytics", href: "/analytics", icon: BarChart3, disabled: true },
+      {
+        title: "Analytics",
+        href: "/analytics",
+        icon: BarChart3,
+        disabled: true,
+      },
       { title: "Activity", href: "/activity", icon: Activity, disabled: true },
       {
         title: "Notifications",
@@ -45,14 +55,21 @@ export const navSections: NavSection[] = [
     label: "Automate",
     items: [
       { title: "AI Assistant", href: "/ai", icon: Sparkles, disabled: true },
-      { title: "Workflows", href: "/workflows", icon: Workflow, disabled: true },
+      {
+        title: "Workflows",
+        href: "/workflows",
+        icon: Workflow,
+        disabled: true,
+      },
     ],
   },
 ];
 
 /** Secondary nav pinned to the bottom of the sidebar. */
 export const secondaryNav: NavSection = {
-  items: [{ title: "Settings", href: "/settings", icon: Settings, disabled: true }],
+  items: [
+    { title: "Settings", href: "/settings", icon: Settings, disabled: true },
+  ],
 };
 
 // TODO: Replace with the authenticated user from the backend session.

@@ -43,7 +43,8 @@ const defaultIcons: Record<
 };
 
 interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    Omit<React.HTMLAttributes<HTMLDivElement>, "title">,
     VariantProps<typeof alertVariants> {
   title?: React.ReactNode;
   /** Override the variant's default icon; pass `null` to hide it. */
