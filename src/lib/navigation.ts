@@ -7,6 +7,7 @@ import {
   Activity,
   BarChart3,
   Sparkles,
+  Bot,
   Workflow,
   Settings,
 } from "lucide-react";
@@ -52,6 +53,7 @@ export const navSections: NavSection[] = [
     label: "Automate",
     items: [
       { title: "AI Assistant", href: "/ai-assistant", icon: Sparkles },
+      { title: "AI Agents", href: "/ai-agents", icon: Bot },
       {
         title: "Workflows",
         href: "/workflows",
