@@ -51,7 +51,7 @@ export const navSections: NavSection[] = [
   {
     label: "Automate",
     items: [
-      { title: "AI Assistant", href: "/ai", icon: Sparkles, disabled: true },
+      { title: "AI Assistant", href: "/ai-assistant", icon: Sparkles },
       {
         title: "Workflows",
         href: "/workflows",
