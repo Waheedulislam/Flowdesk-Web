@@ -38,23 +38,12 @@ function Sheet({
 }: SheetProps) {
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const previouslyFocused = React.useRef<HTMLElement | null>(null);
-  const [mounted, setMounted] = React.useState(false);
   const titleId = React.useId();
   const descId = React.useId();
-
-  // Delay unmount so the exit transition can play.
-  const [render, setRender] = React.useState(open);
-  React.useEffect(() => {
-    if (open) {
-      setRender(true);
-      previouslyFocused.current = document.activeElement as HTMLElement;
-    }
-  }, [open]);
-
-  React.useEffect(() => setMounted(true), []);
+  const isClient = typeof window !== "undefined";
 
   React.useEffect(() => {
-    if (!render) return;
+    if (!open) return;
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onOpenChange(false);
@@ -68,7 +57,7 @@ function Sheet({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = original;
     };
-  }, [render, onOpenChange]);
+  }, [open, onOpenChange]);
 
   // Move focus into the panel when it opens; restore it on close.
   React.useEffect(() => {
@@ -82,7 +71,7 @@ function Sheet({
     }
   }, [open]);
 
-  if (!mounted || !render) return null;
+  if (!isClient || !open) return null;
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden" aria-hidden={!open}>
@@ -92,9 +81,6 @@ function Sheet({
           open ? "opacity-100" : "opacity-0",
         )}
         onClick={() => onOpenChange(false)}
-        onTransitionEnd={() => {
-          if (!open) setRender(false);
-        }}
       />
       <div
         ref={panelRef}

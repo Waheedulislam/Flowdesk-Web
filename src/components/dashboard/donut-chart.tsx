@@ -44,7 +44,23 @@ function DonutChart({
   const circumference = 2 * Math.PI * radius;
   const total = segments.reduce((sum, s) => sum + s.value, 0) || 1;
 
-  let accrued = 0;
+  const decoratedSegments = segments.reduce<{
+    accrued: number;
+    segments: Array<DonutSegment & { dash: number; offset: number }>;
+  }>(
+    (acc, segment) => {
+      const fraction = segment.value / total;
+      const dash = fraction * circumference;
+      const offset = -(acc.accrued / total) * circumference;
+      acc.accrued += segment.value;
+      acc.segments.push({ ...segment, dash, offset });
+      return acc;
+    },
+    {
+      accrued: 0,
+      segments: [] as Array<DonutSegment & { dash: number; offset: number }>,
+    },
+  ).segments;
 
   return (
     <div
@@ -62,27 +78,20 @@ function DonutChart({
           stroke="var(--border)"
           strokeWidth={strokeWidth}
         />
-        {segments.map((segment) => {
-          const fraction = segment.value / total;
-          const dash = fraction * circumference;
-          const offset = -(accrued / total) * circumference;
-          accrued += segment.value;
-
-          return (
-            <circle
-              key={segment.key}
-              cx="50"
-              cy="50"
-              r={radius}
-              fill="none"
-              stroke={toneVar[segment.tone]}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${dash} ${circumference - dash}`}
-              strokeDashoffset={offset}
-              strokeLinecap="butt"
-            />
-          );
-        })}
+        {decoratedSegments.map((segment) => (
+          <circle
+            key={segment.key}
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke={toneVar[segment.tone]}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${segment.dash} ${circumference - segment.dash}`}
+            strokeDashoffset={segment.offset}
+            strokeLinecap="butt"
+          />
+        ))}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-semibold tabular-nums text-foreground">

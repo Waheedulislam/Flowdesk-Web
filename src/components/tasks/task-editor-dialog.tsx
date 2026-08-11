@@ -39,25 +39,36 @@ export function TaskEditorDialog({
   task,
   onSave,
 }: TaskEditorDialogProps) {
-  const [form, setForm] = React.useState(defaultValues);
-
-  React.useEffect(() => {
-    if (task) {
-      setForm({
-        title: task.title,
-        description: task.description,
-        project: task.project,
-        assignee: task.assignee,
-        status: task.status,
-        priority: task.priority,
-        dueDate: task.dueDate,
-      });
-    } else {
-      setForm(defaultValues);
-    }
-  }, [task, open]);
-
   if (!open) return null;
+
+  return (
+    <TaskEditorDialogContent
+      key={task?.id ?? "new"}
+      task={task}
+      onOpenChange={onOpenChange}
+      onSave={onSave}
+    />
+  );
+}
+
+function TaskEditorDialogContent({
+  task,
+  onOpenChange,
+  onSave,
+}: Omit<TaskEditorDialogProps, "open">) {
+  const [form, setForm] = React.useState(() =>
+    task
+      ? {
+          title: task.title,
+          description: task.description,
+          project: task.project,
+          assignee: task.assignee,
+          status: task.status,
+          priority: task.priority,
+          dueDate: task.dueDate,
+        }
+      : defaultValues,
+  );
 
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm">

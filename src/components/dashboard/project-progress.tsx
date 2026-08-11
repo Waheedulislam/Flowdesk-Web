@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import type {
@@ -29,8 +30,14 @@ interface ProjectProgressProps {
 function ProjectProgress({ projects }: ProjectProgressProps) {
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="flex items-center justify-between">
         <CardTitle>Project Progress</CardTitle>
+        <Link
+          href="/analytics"
+          className="text-sm text-primary hover:underline"
+        >
+          View analytics →
+        </Link>
       </CardHeader>
       <CardContent className="space-y-5">
         {projects.map((project) => {

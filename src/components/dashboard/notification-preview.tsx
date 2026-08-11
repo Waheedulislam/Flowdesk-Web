@@ -4,10 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  notificationTone,
-  type NotificationItem,
-} from "@/lib/dashboard-data";
+import { notificationTone, type NotificationItem } from "@/lib/dashboard-data";
 import { toneDot } from "./tone-styles";
 
 /**
@@ -18,9 +15,13 @@ import { toneDot } from "./tone-styles";
 
 interface NotificationPreviewProps {
   notifications: NotificationItem[];
+  action?: React.ReactNode;
 }
 
-function NotificationPreview({ notifications }: NotificationPreviewProps) {
+function NotificationPreview({
+  notifications,
+  action,
+}: NotificationPreviewProps) {
   const unread = notifications.filter((n) => !n.read).length;
 
   return (
@@ -34,19 +35,7 @@ function NotificationPreview({ notifications }: NotificationPreviewProps) {
             </span>
           ) : null}
         </CardTitle>
-        {/* TODO: Connect notification API (link to full notifications route) */}
-        <Link
-          href="/notifications"
-          aria-disabled
-          tabIndex={-1}
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "pointer-events-none gap-1 text-muted-foreground",
-          )}
-        >
-          View all
-          <ArrowRight className="size-3.5" aria-hidden />
-        </Link>
+        {action ? <div className="shrink-0">{action}</div> : null}
       </CardHeader>
       <CardContent>
         <ul className="space-y-1">
@@ -61,7 +50,9 @@ function NotificationPreview({ notifications }: NotificationPreviewProps) {
               <span
                 className={cn(
                   "mt-1.5 size-2 shrink-0 rounded-full",
-                  item.read ? "bg-transparent" : toneDot[notificationTone[item.type]],
+                  item.read
+                    ? "bg-transparent"
+                    : toneDot[notificationTone[item.type]],
                 )}
                 aria-hidden
               />

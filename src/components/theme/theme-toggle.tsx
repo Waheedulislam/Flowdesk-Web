@@ -26,9 +26,13 @@ const options = [
  */
 export function ThemeToggle({ align = "end" }: { align?: "start" | "end" }) {
   const { theme, resolvedTheme, setTheme } = useTheme();
+  // `window` exists during the browser's first render, but not during SSR.
+  // Start from the same value on both sides and update only after hydration.
   const [mounted, setMounted] = React.useState(false);
 
-  React.useEffect(() => setMounted(true), []);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const showMoon = mounted && resolvedTheme === "dark";
 

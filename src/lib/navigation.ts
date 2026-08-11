@@ -38,9 +38,8 @@ export const navSections: NavSection[] = [
         title: "Analytics",
         href: "/analytics",
         icon: BarChart3,
-        disabled: true,
       },
-      { title: "Activity", href: "/activity", icon: Activity },
+      { title: "Activity Logs", href: "/activity", icon: Activity },
       {
         title: "Notifications",
         href: "/notifications",
@@ -57,7 +56,6 @@ export const navSections: NavSection[] = [
         title: "Workflows",
         href: "/workflows",
         icon: Workflow,
-        disabled: true,
       },
     ],
   },

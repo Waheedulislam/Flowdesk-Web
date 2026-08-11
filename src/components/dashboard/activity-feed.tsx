@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActivityItemData } from "@/lib/dashboard-data";
 import { ActivityItem } from "./activity-item";
@@ -9,13 +10,15 @@ import { ActivityItem } from "./activity-item";
 
 interface ActivityFeedProps {
   activity: ActivityItemData[];
+  action?: React.ReactNode;
 }
 
-function ActivityFeed({ activity }: ActivityFeedProps) {
+function ActivityFeed({ activity, action }: ActivityFeedProps) {
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
         <CardTitle>Recent Activity</CardTitle>
+        {action ? <div className="shrink-0">{action}</div> : null}
       </CardHeader>
       <CardContent>
         <ul className="space-y-5">
