@@ -4,7 +4,8 @@ import { Sheet } from "@/components/ui/sheet";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher";
-import { navSections, secondaryNav } from "@/lib/navigation";
+import { getNavigationForRole, secondaryNav } from "@/lib/navigation";
+import { useRole } from "@/context/role-context";
 
 interface MobileNavProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface MobileNavProps {
  * Sheet; closes automatically on navigation.
  */
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
+  const { role } = useRole();
   const close = () => onOpenChange(false);
 
   return (
@@ -31,7 +33,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
           <BrandMark />
         </div>
         <WorkspaceSwitcher />
-        <SidebarNav sections={navSections} onNavigate={close} />
+        <SidebarNav sections={getNavigationForRole(role)} onNavigate={close} />
         <div className="border-t border-sidebar-border pt-4">
           <SidebarNav sections={[secondaryNav]} onNavigate={close} />
         </div>

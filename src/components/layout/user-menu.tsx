@@ -13,11 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { mockUser } from "@/lib/navigation";
+import { RoleBadge } from "@/components/roles/role-badge";
+import { RoleSwitcher } from "@/components/roles/role-switcher";
+import { useRole } from "@/context/role-context";
 
 /**
  * Account menu in the navbar. All actions are UI-only placeholders.
  */
 export function UserMenu() {
+  const { role } = useRole();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -38,8 +42,11 @@ export function UserMenu() {
             <span className="truncate text-xs text-muted-foreground">
               {mockUser.email}
             </span>
+            <RoleBadge role={role} />
           </div>
         </div>
+        <DropdownMenuSeparator />
+        <RoleSwitcher />
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Account</DropdownMenuLabel>
         {/* TODO: Route to profile settings. */}

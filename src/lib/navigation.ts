@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import type { AppUser, NavSection, Workspace } from "@/types";
+import type { UserRole } from "@/context/role-context";
 
 /**
  * Shared navigation config for the sidebar and mobile drawer.
@@ -62,6 +63,18 @@ export const navSections: NavSection[] = [
     ],
   },
 ];
+
+export function getNavigationForRole(role: UserRole): NavSection[] {
+  const dashboard = { title: "Dashboard", href: "/", icon: LayoutDashboard };
+  const projects = { title: "Projects", href: "/projects", icon: FolderKanban };
+  const tasks = { title: role === "member" ? "My Tasks" : "Tasks", href: "/tasks", icon: ListChecks };
+  const automate = { label: "Automate", items: [{ title: "AI Assistant", href: "/ai-assistant", icon: Sparkles }, ...(role === "member" ? [] : [{ title: "AI Agents", href: "/ai-agents", icon: Bot }]), ...(role === "member" ? [] : [{ title: "Workflows", href: "/workflows", icon: Workflow }])] };
+  if (role === "member") return [{ items: [dashboard, projects, tasks, { title: "Notifications", href: "/notifications", icon: Bell, badge: "3" }] }, automate];
+  const core = [dashboard, projects, tasks, { title: "Workspace", href: "/workspace", icon: Users }];
+  const insights = { label: "Insights", items: [{ title: "Analytics", href: "/analytics", icon: BarChart3 }, { title: "Activity Logs", href: "/activity", icon: Activity }, { title: "Notifications", href: "/notifications", icon: Bell, badge: "3" }] };
+  if (role === "admin") return [{ items: core }, insights, automate];
+  return [{ items: [dashboard, { title: "Users", href: "/admin/users", icon: Users }, { title: "Workspaces", href: "/admin/workspaces", icon: FolderKanban }, projects, tasks] }, { label: "Administration", items: [{ title: "System Analytics", href: "/admin/analytics", icon: BarChart3 }, { title: "Audit Logs", href: "/admin/audit-logs", icon: Activity }] }, insights, automate];
+}
 
 /** Secondary nav pinned to the bottom of the sidebar. */
 export const secondaryNav: NavSection = {

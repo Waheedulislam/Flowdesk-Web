@@ -8,7 +8,8 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher";
-import { navSections, secondaryNav } from "@/lib/navigation";
+import { getNavigationForRole, secondaryNav } from "@/lib/navigation";
+import { useRole } from "@/context/role-context";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -20,6 +21,7 @@ interface SidebarProps {
  * Uses sidebar-specific tokens so it reads as a distinct surface in both themes.
  */
 export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
+  const { role } = useRole();
   return (
     <aside
       data-collapsed={collapsed}
@@ -47,7 +49,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
           collapsed && "px-2",
         )}
       >
-        <SidebarNav sections={navSections} collapsed={collapsed} />
+        <SidebarNav sections={getNavigationForRole(role)} collapsed={collapsed} />
       </div>
 
       <div className={cn("border-t border-sidebar-border p-3", collapsed && "px-2")}>
