@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,16 +46,9 @@ export function Navbar({ onOpenMobileNav }: NavbarProps) {
       </button>
 
       <div className="ml-auto flex items-center gap-1">
-        {/* TODO: Connect to notifications feed. */}
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Notifications"
-          className="relative"
-        >
-          <Bell />
-          <span className="absolute right-2 top-2 size-2 rounded-full bg-destructive ring-2 ring-background" />
-        </Button>
+        {/* Notification bell + dropdown (UI-only) */}
+        {/* TODO: Connect notifications API */}
+        <NotificationBell />
         <ThemeToggle />
         <div className="mx-1 h-6 w-px bg-border" aria-hidden />
         <UserMenu />
