@@ -33,6 +33,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {children}
           </div>
         </main>
+
+        <footer className="shrink-0 border-t border-border px-4 py-4 lg:px-6">
+          <p className="text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()} FlowDesk. All rights reserved.
+          </p>
+        </footer>
       </div>
     </div>
   );

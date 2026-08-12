@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { AnalyticsHeader } from "@/components/analytics/analytics-header";
 import TaskTrendChart from "@/components/analytics/task-trend-chart";
 import TaskDistributionChart from "@/components/analytics/task-distribution-chart";
@@ -13,8 +12,7 @@ import { ArrowRight } from "lucide-react";
 
 export default function AnalyticsPage() {
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <AnalyticsHeader />
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -61,6 +59,5 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
   );
 }

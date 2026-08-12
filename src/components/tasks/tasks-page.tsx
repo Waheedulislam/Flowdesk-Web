@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Plus, Sparkles } from "lucide-react";
 
-import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskFilters } from "@/components/tasks/task-filters";
@@ -177,8 +176,7 @@ export function TasksPage() {
   };
 
   return (
-    <AppShell>
-      <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
@@ -345,6 +343,5 @@ export function TasksPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   );
 }

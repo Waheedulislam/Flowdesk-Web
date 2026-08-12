@@ -2,7 +2,6 @@
 
 import * as React from "react";
 
-import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
@@ -93,8 +92,7 @@ export function ProjectsPage() {
   };
 
   return (
-    <AppShell>
-      <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
@@ -234,7 +232,6 @@ export function ProjectsPage() {
           onCreate={handleCreateProject}
         />
         <DeleteProjectDialog open={deleteOpen} onOpenChange={setDeleteOpen} />
-      </div>
-    </AppShell>
+    </div>
   );
 }

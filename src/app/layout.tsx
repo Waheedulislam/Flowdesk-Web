@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// test my code
+// const test = { hello };
+
 export const metadata: Metadata = {
   title: {
     default: "FlowDesk — Work, together",
@@ -43,7 +46,12 @@ export default function RootLayout({
           <RoleProvider>
             {children}
             {/* App-wide toast host. Follows the active theme. */}
-            <Toaster position="bottom-right" theme="system" richColors closeButton />
+            <Toaster
+              position="bottom-right"
+              theme="system"
+              richColors
+              closeButton
+            />
           </RoleProvider>
         </ThemeProvider>
       </body>

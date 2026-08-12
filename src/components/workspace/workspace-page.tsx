@@ -2,7 +2,6 @@
 
 import * as React from "react";
 
-import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InviteMemberDialog } from "@/components/workspace/invite-member-dialog";
@@ -105,8 +104,7 @@ export function WorkspacePage() {
   };
 
   return (
-    <AppShell>
-      <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
@@ -260,7 +258,6 @@ export function WorkspacePage() {
           onOpenChange={setRemoveDialogOpen}
           onConfirm={handleRemoveMember}
         />
-      </div>
-    </AppShell>
+    </div>
   );
 }
