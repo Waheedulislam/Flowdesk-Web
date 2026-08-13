@@ -23,7 +23,7 @@ import type { UserRole } from "@/context/role-context";
 export const navSections: NavSection[] = [
   {
     items: [
-      { title: "Dashboard", href: "/", icon: LayoutDashboard },
+      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       {
         title: "Projects",
         href: "/projects",
@@ -65,7 +65,7 @@ export const navSections: NavSection[] = [
 ];
 
 export function getNavigationForRole(role: UserRole): NavSection[] {
-  const dashboard = { title: "Dashboard", href: "/", icon: LayoutDashboard };
+  const dashboard = { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard };
   const projects = { title: "Projects", href: "/projects", icon: FolderKanban };
   const tasks = { title: role === "member" ? "My Tasks" : "Tasks", href: "/tasks", icon: ListChecks };
   const automate = { label: "Automate", items: [{ title: "AI Assistant", href: "/ai-assistant", icon: Sparkles }, ...(role === "member" ? [] : [{ title: "AI Agents", href: "/ai-agents", icon: Bot }]), ...(role === "member" ? [] : [{ title: "Workflows", href: "/workflows", icon: Workflow }])] };
