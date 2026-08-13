@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { RoleProvider } from "@/context/role-context";
+import { MockAuthProvider } from "@/context/mock-auth-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,16 +44,18 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <ThemeProvider>
-          <RoleProvider>
-            {children}
-            {/* App-wide toast host. Follows the active theme. */}
-            <Toaster
-              position="bottom-right"
-              theme="system"
-              richColors
-              closeButton
-            />
-          </RoleProvider>
+          <MockAuthProvider>
+            <RoleProvider>
+              {children}
+              {/* App-wide toast host. Follows the active theme. */}
+              <Toaster
+                position="bottom-right"
+                theme="system"
+                richColors
+                closeButton
+              />
+            </RoleProvider>
+          </MockAuthProvider>
         </ThemeProvider>
       </body>
     </html>

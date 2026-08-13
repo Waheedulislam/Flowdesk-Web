@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/layout/app-shell";
+import { RequireMockAuthentication } from "@/components/auth/route-guard";
 
 /**
  * Shared application shell for all authenticated routes: fixed sidebar,
@@ -10,5 +11,9 @@ export default function AppLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <RequireMockAuthentication>
+      <AppShell>{children}</AppShell>
+    </RequireMockAuthentication>
+  );
 }
