@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Bot, MoreHorizontal, Pause, Play, Sparkles } from "lucide-react";
+import { Activity, ArrowLeft, Bot, CheckSquare, FileText, MoreHorizontal, Pause, Play, Save, Settings2, Sparkles, Users, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AgentStatusBadge } from "@/components/ai-agents/agent-status-badge";

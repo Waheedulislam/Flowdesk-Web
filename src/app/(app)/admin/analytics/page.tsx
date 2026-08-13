@@ -1,1 +1,2 @@
-import { AdminPage } from "@/components/admin/admin-page"; export default function Page() { return <AdminPage type="analytics" />; }
+import { SystemAnalytics } from "@/components/admin/system-analytics";
+export default function Page() { return <SystemAnalytics />; }

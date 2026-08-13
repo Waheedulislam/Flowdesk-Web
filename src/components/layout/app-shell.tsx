@@ -5,6 +5,7 @@ import * as React from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { AppFooter } from "@/components/layout/app-footer";
 
 /**
  * The main authenticated application shell: fixed sidebar + sticky navbar with
@@ -34,11 +35,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </main>
 
-        <footer className="shrink-0 border-t border-border px-4 py-4 lg:px-6">
+        <AppFooter />
+        {/*
           <p className="text-center text-xs text-muted-foreground">
             © {new Date().getFullYear()} FlowDesk. All rights reserved.
           </p>
-        </footer>
+        */}
       </div>
     </div>
   );

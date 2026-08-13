@@ -16,12 +16,14 @@ import { mockUser } from "@/lib/navigation";
 import { RoleBadge } from "@/components/roles/role-badge";
 import { RoleSwitcher } from "@/components/roles/role-switcher";
 import { useRole } from "@/context/role-context";
+import { useRouter } from "next/navigation";
 
 /**
  * Account menu in the navbar. All actions are UI-only placeholders.
  */
 export function UserMenu() {
   const { role } = useRole();
+  const router = useRouter();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -49,23 +51,20 @@ export function UserMenu() {
         <RoleSwitcher />
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Account</DropdownMenuLabel>
-        {/* TODO: Route to profile settings. */}
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/profile")}>
           <User />
           Profile
         </DropdownMenuItem>
-        {/* TODO: Route to workspace settings. */}
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/settings")}>
           <Settings />
           Settings
         </DropdownMenuItem>
-        {/* TODO: Route to billing. */}
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/billing")}>
           <CreditCard />
           Billing
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {/* TODO: Connect sign-out to auth logout. */}
+        {/* TODO: Connect sign-out authentication logic */}
         <DropdownMenuItem variant="destructive">
           <LogOut />
           Sign out

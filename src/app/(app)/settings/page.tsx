@@ -1,19 +1,21 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = { title: "Settings" };
+import * as React from "react";
+import { Monitor, Moon, ShieldCheck, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
+const sections = ["General", "Workspace", "Notifications", "Appearance", "Security", "Billing"] as const;
 export default function SettingsPage() {
-  return (
-    <div className="flex flex-col gap-6">
-      <header>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-          Account
-        </p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Manage your workspace preferences and account details.
-        </p>
-      </header>
-    </div>
-  );
+  // TODO: Connect settings API
+  // TODO: Connect notification preferences API
+  const [section, setSection] = React.useState<(typeof sections)[number]>("General");
+  const { theme, setTheme } = useTheme();
+  return <div><header><h1 className="text-3xl font-semibold tracking-tight">Settings</h1><p className="mt-2 text-sm text-muted-foreground">Manage your workspace preferences and account details.</p></header><div className="mt-8 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]"><nav className="flex gap-1 overflow-x-auto lg:flex-col">{sections.map((item) => <button key={item} onClick={() => setSection(item)} className={`shrink-0 rounded-md px-3 py-2 text-left text-sm transition-colors ${section === item ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}>{item}</button>)}</nav><div>{section === "General" || section === "Workspace" ? <Card><CardHeader><CardTitle>{section === "General" ? "General settings" : "Workspace details"}</CardTitle><CardDescription>These details appear throughout your team workspace.</CardDescription></CardHeader><CardContent className="space-y-5"><Field label="Workspace name" value="FlowDesk Core"/><Field label="Workspace description" value="A collaborative home for the FlowDesk team."/><div><Label htmlFor="timezone">Workspace timezone</Label><select id="timezone" className="mt-2 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"><option>Asia/Dhaka (GMT+6)</option><option>UTC</option><option>America/New_York</option></select></div><Button>Save changes</Button></CardContent></Card> : null}{section === "Notifications" ? <PreferenceCard title="Notification preferences" copy="Choose the workspace updates you want to receive." items={["Email notifications", "Task assignments", "Mentions", "Due date reminders", "Weekly reports"]}/> : null}{section === "Appearance" ? <Card><CardHeader><CardTitle>Appearance</CardTitle><CardDescription>Choose how FlowDesk looks on this device.</CardDescription></CardHeader><CardContent className="grid gap-3 sm:grid-cols-3">{[{ value: "light", label: "Light", icon: Sun }, { value: "dark", label: "Dark", icon: Moon }, { value: "system", label: "System", icon: Monitor }].map(({value,label,icon:Icon}) => <button key={value} onClick={() => setTheme(value)} className={`flex items-center gap-3 rounded-lg border p-4 text-left ${theme === value ? "border-primary bg-primary/5" : "hover:bg-accent/50"}`}><Icon className="size-5"/><span className="font-medium">{label}</span></button>)}</CardContent></Card> : null}{section === "Security" ? <Card><CardHeader><CardTitle>Security</CardTitle><CardDescription>Review the security of your FlowDesk account.</CardDescription></CardHeader><CardContent className="space-y-5"><SecurityRow title="Password" copy="Last changed 3 months ago" action="Change password"/><SecurityRow title="Two-factor authentication" copy="Add an extra layer of protection to your account." action="Set up"/><SecurityRow title="Active sessions" copy="You are currently signed in on 2 devices." action="Review"/></CardContent></Card> : null}{section === "Billing" ? <Card><CardHeader><CardTitle>Billing</CardTitle><CardDescription>Manage your subscription and invoices from the billing page.</CardDescription></CardHeader><CardContent><Button onClick={() => window.location.assign("/billing")}>Open billing</Button></CardContent></Card> : null}</div></div></div>;
 }
+function Field({label,value}:{label:string;value:string}){const id=label.toLowerCase().replaceAll(" ","-");return <div><Label htmlFor={id}>{label}</Label><Input id={id} defaultValue={value} className="mt-2"/></div>}
+function PreferenceCard({title,copy,items}:{title:string;copy:string;items:string[]}){return <Card><CardHeader><CardTitle>{title}</CardTitle><CardDescription>{copy}</CardDescription></CardHeader><CardContent className="divide-y">{items.map((item,index)=><label key={item} className="flex cursor-pointer items-center justify-between py-4 text-sm font-medium"><span>{item}</span><input defaultChecked={index<4} type="checkbox" className="size-4 accent-primary"/></label>)}</CardContent></Card>}
+function SecurityRow({title,copy,action}:{title:string;copy:string;action:string}){return <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-medium">{title}</p><p className="mt-1 text-sm text-muted-foreground">{copy}</p></div><Button variant="outline"><ShieldCheck/>{action}</Button></div>}

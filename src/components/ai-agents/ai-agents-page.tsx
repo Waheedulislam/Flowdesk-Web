@@ -3,6 +3,7 @@ import * as React from "react";
 import { Bot, Plus } from "lucide-react";
 import { AgentCard } from "@/components/ai-agents/agent-card";
 import { CreateAgentDialog } from "@/components/ai-agents/create-agent-dialog";
+import { Button } from "@/components/ui/button";
 import { mockAgents, type Agent } from "@/lib/ai-agents-data";
 
 export function AiAgentsPage() { const [agents, setAgents] = React.useState(mockAgents); const [open, setOpen] = React.useState(false); const toggle = (id: string) => { // TODO: Connect update-agent API

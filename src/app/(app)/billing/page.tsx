@@ -1,19 +1,13 @@
-import type { Metadata } from "next";
+import { Check, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const metadata: Metadata = { title: "Billing" };
-
-export default function BillingPage() {
-  return (
-    <div className="flex flex-col gap-6">
-      <header>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-          Account
-        </p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Billing</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Manage your plan, invoices, and payment methods.
-        </p>
-      </header>
-    </div>
-  );
+const plans = [{name:"Free",price:"$0",features:["3 projects","Up to 3 team members","Core tasks"]},{name:"Business",price:"$29",features:["Unlimited projects","Up to 25 team members","Analytics & reporting","AI Assistant","Workflows"],current:true},{name:"Enterprise",price:"Custom",features:["Unlimited team members","Advanced analytics","AI Agents","Priority support"]}];
+export default function BillingPage(){
+  // TODO: Connect billing/subscription API
+  // TODO: Connect Stripe checkout
+  // TODO: Connect subscription management
+  // TODO: Connect billing API
+  return <div className="space-y-6"><header><h1 className="text-3xl font-semibold tracking-tight">Billing &amp; Subscription</h1><p className="mt-2 text-sm text-muted-foreground">Manage your FlowDesk plan and subscription.</p></header><Card className="border-primary/30"><CardContent className="flex flex-col gap-5 p-6 lg:flex-row lg:items-center lg:justify-between"><div><div className="flex items-center gap-2"><p className="font-semibold">FlowDesk Core</p><Badge variant="success">Active</Badge></div><h2 className="mt-2 text-2xl font-semibold">Business Plan <span className="text-base font-normal text-muted-foreground">· $29 / month</span></h2><p className="mt-2 text-sm text-muted-foreground">Next billing date: September 1, 2026</p></div><div className="flex flex-wrap gap-2"><Button>Upgrade plan</Button><Button variant="outline">Manage subscription</Button></div></CardContent></Card><section><div className="mb-4"><h2 className="text-lg font-semibold">Compare plans</h2><p className="mt-1 text-sm text-muted-foreground">Choose a plan that fits your team’s needs.</p></div><div className="grid gap-4 lg:grid-cols-3">{plans.map((plan)=><Card key={plan.name} className={plan.current?"border-primary shadow-md":""}><CardHeader><div className="flex items-center justify-between"><CardTitle>{plan.name}</CardTitle>{plan.current?<Badge>Current plan</Badge>:null}</div><CardDescription><span className="text-2xl font-semibold text-foreground">{plan.price}</span>{plan.price.startsWith("$")?" / month":""}</CardDescription></CardHeader><CardContent><ul className="space-y-3 text-sm">{plan.features.map((feature)=><li key={feature} className="flex gap-2"><Check className="mt-0.5 size-4 text-primary"/>{feature}</li>)}</ul><Button className="mt-6 w-full" variant={plan.current?"outline":"default"}>{plan.current?"Current plan":"Choose plan"}</Button></CardContent></Card>)}</div></section><Card><CardHeader><CardTitle>Billing history</CardTitle><CardDescription>Your recent invoices and payment status.</CardDescription></CardHeader><CardContent className="p-0"><div className="overflow-x-auto"><table className="w-full min-w-[620px] text-sm"><thead className="border-y bg-muted/50 text-left text-xs text-muted-foreground"><tr>{["Date","Invoice","Plan","Amount","Status","Action"].map(item=><th key={item} className="px-6 py-3 font-medium">{item}</th>)}</tr></thead><tbody>{[["Aug 01, 2026","INV-001","Business","$29","Paid"],["Jul 01, 2026","INV-000","Business","$29","Paid"]].map(row=><tr key={row[1]} className="border-b last:border-0"><td className="px-6 py-4">{row[0]}</td><td className="px-6 py-4 font-medium">{row[1]}</td><td className="px-6 py-4">{row[2]}</td><td className="px-6 py-4">{row[3]}</td><td className="px-6 py-4"><Badge variant="success">{row[4]}</Badge></td><td className="px-6 py-4"><Button size="sm" variant="ghost"><Download/>Download</Button></td></tr>)}</tbody></table></div></CardContent></Card></div>;
 }
