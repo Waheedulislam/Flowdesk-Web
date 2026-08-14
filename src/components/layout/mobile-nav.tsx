@@ -20,6 +20,8 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   const { role } = useRole();
   const close = () => onOpenChange(false);
 
+  if (!role) return null;
+
   return (
     <Sheet
       open={open}

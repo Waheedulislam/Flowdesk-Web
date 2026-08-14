@@ -1,17 +1,17 @@
 "use client";
 
 import * as React from "react";
+import { useAuth } from "@/context/auth-context";
+import type { BackendUserRole } from "@/lib/api/auth.api";
 
-export type UserRole = "super_admin" | "admin" | "member";
+export type UserRole = BackendUserRole;
 
-type RoleContextValue = { role: UserRole; setRole: (role: UserRole) => void };
+type RoleContextValue = { role: UserRole | null };
 const RoleContext = React.createContext<RoleContextValue | null>(null);
 
-// TODO: Replace mock role with authenticated user role
-// TODO: Connect role to backend authorization
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRole] = React.useState<UserRole>("admin");
-  return <RoleContext.Provider value={{ role, setRole }}>{children}</RoleContext.Provider>;
+  const { user } = useAuth();
+  return <RoleContext.Provider value={{ role: user?.role ?? null }}>{children}</RoleContext.Provider>;
 }
 
 export function useRole() {
@@ -20,4 +20,8 @@ export function useRole() {
   return context;
 }
 
-export const roleLabels: Record<UserRole, string> = { super_admin: "Super Admin", admin: "Admin", member: "Member" };
+export const roleLabels: Record<UserRole, string> = {
+  SYSTEM_ADMIN: "Super Admin",
+  ADMIN: "Admin",
+  USER: "User",
+};

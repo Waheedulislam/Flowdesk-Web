@@ -17,6 +17,7 @@ import { cn, getInitials } from "@/lib/utils";
 import { mockWorkspaces } from "@/lib/navigation";
 import type { Workspace } from "@/types";
 import type { DashboardSummary } from "@/lib/dashboard-data";
+import { useAuth } from "@/context/auth-context";
 
 /**
  * Dashboard header: greeting + productivity summary, a workspace selector, a
@@ -32,6 +33,7 @@ interface DashboardHeaderProps {
 }
 
 function DashboardHeader({ summary }: DashboardHeaderProps) {
+  const { user } = useAuth();
   // TODO: Replace with the active workspace from app state / backend session.
   const [workspace, setWorkspace] = React.useState<Workspace>(mockWorkspaces[0]);
   // TODO: Refetch dashboard analytics when the selected period changes.
@@ -42,7 +44,7 @@ function DashboardHeader({ summary }: DashboardHeaderProps) {
       <div className="space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Good to see you, {summary.userFirstName}
+            Good to see you{user?.name ? `, ${user.name}` : ""}
           </h1>
           <Badge variant="secondary">{workspace.name}</Badge>
         </div>

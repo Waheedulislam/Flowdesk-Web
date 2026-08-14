@@ -13,6 +13,7 @@ import { FormField } from "@/components/ui/form-field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { isValidEmail, isValidPassword, messages } from "@/lib/validation";
+import { registerUser } from "@/lib/api/auth.api";
 
 type Status = "idle" | "loading" | "success";
 type Errors = Partial<
@@ -71,23 +72,7 @@ export function RegisterForm() {
     setStatus("loading");
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
-      const response = await fetch(`${baseUrl}/api/v1/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
-      });
-
-      if (response.status !== 201) {
-        const body: unknown = await response.json().catch(() => null);
-        const message =
-          typeof body === "object" && body !== null && "message" in body &&
-          typeof body.message === "string"
-            ? body.message
-            : "We couldn't create your account. Please try again.";
-        throw new Error(message);
-      }
+      await registerUser({ name: name.trim(), email: email.trim(), password });
 
       // The register endpoint returns a profile, not an authenticated session.
       // TODO: Revisit this redirect if the backend registration contract changes.

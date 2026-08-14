@@ -1,8 +1,6 @@
-/**
- * Admin routes inherit the authenticated `(app)` layout guard.
- * TODO: Add role-based authorization.
- * TODO: Restrict /admin to SUPER_ADMIN.
- */
+import { RequireRole } from "@/components/auth/route-guard";
+
+/** Admin routes use the role returned by `GET /api/v1/users/me`. */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <RequireRole roles={["SYSTEM_ADMIN", "ADMIN"]}>{children}</RequireRole>;
 }

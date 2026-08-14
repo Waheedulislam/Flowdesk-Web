@@ -12,9 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { mockUser } from "@/lib/navigation";
 import { RoleBadge } from "@/components/roles/role-badge";
-import { RoleSwitcher } from "@/components/roles/role-switcher";
 import { useRole } from "@/context/role-context";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
@@ -22,10 +20,10 @@ import { useAuth } from "@/context/auth-context";
 /**
  * Account menu in the navbar. All actions are UI-only placeholders.
  */
-export function UserMenu() {
+export function UserMenu({ signOutRedirect = "/login" }: { signOutRedirect?: string | null }) {
   const { role } = useRole();
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -35,22 +33,20 @@ export function UserMenu() {
           "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         )}
       >
-        <Avatar name={mockUser.name} src={mockUser.avatarUrl} className="size-8" />
+        <Avatar name={user?.name ?? "Account"} src={user?.avatar ?? undefined} className="size-8" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="min-w-60">
         <div className="flex items-center gap-2.5 p-2">
-          <Avatar name={mockUser.name} src={mockUser.avatarUrl} className="size-9" />
+          <Avatar name={user?.name ?? "Account"} src={user?.avatar ?? undefined} className="size-9" />
           <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-medium">{mockUser.name}</span>
+            <span className="truncate text-sm font-medium">{user?.name ?? "Account"}</span>
             <span className="truncate text-xs text-muted-foreground">
-              {mockUser.email}
+              {user?.email ?? ""}
             </span>
-            <RoleBadge role={role} />
+            {role ? <RoleBadge role={role} /> : null}
           </div>
         </div>
-        <DropdownMenuSeparator />
-        <RoleSwitcher />
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Account</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => router.push("/profile")}>
@@ -70,7 +66,7 @@ export function UserMenu() {
           variant="destructive"
           onClick={() => {
             signOut();
-            router.replace("/login");
+            if (signOutRedirect) router.replace(signOutRedirect);
           }}
         >
           <LogOut />

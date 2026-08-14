@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import type { BackendUserRole } from "@/lib/api/auth.api";
 
 function RedirectingNotice({ destination }: { destination: string }) {
   return (
@@ -41,5 +42,20 @@ export function RedirectAuthenticatedUser({ children }: { children: React.ReactN
 
   if (!isReady) return <RedirectingNotice destination="your session" />;
   if (isAuthenticated) return <RedirectingNotice destination="dashboard" />;
+  return <>{children}</>;
+}
+
+/** Restricts routes using the role returned by the backend current-user API. */
+export function RequireRole({ children, roles }: { children: React.ReactNode; roles: readonly BackendUserRole[] }) {
+  const router = useRouter();
+  const { isReady, user } = useAuth();
+  const isAllowed = Boolean(user && roles.includes(user.role));
+
+  React.useEffect(() => {
+    if (isReady && !isAllowed) router.replace("/dashboard");
+  }, [isAllowed, isReady, router]);
+
+  if (!isReady) return <RedirectingNotice destination="your account" />;
+  if (!isAllowed) return <RedirectingNotice destination="dashboard" />;
   return <>{children}</>;
 }

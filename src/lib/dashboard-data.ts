@@ -50,8 +50,6 @@ export type TrendDirection = "up" | "down" | "flat";
 /* ------------------------------------------------------------------ */
 
 export interface DashboardSummary {
-  /** Short greeting name for the header. */
-  userFirstName: string;
   /** One-line productivity summary shown under the title. */
   headline: string;
   /** Active workspace label echoed in the header. */
@@ -62,7 +60,6 @@ export interface DashboardSummary {
 
 // TODO: Connect workspace analytics API (header summary)
 export const dashboardSummary: DashboardSummary = {
-  userFirstName: "Ada",
   headline: "Here's how your workspace is tracking today.",
   activeWorkspace: "FlowDesk Core",
   dueToday: 5,

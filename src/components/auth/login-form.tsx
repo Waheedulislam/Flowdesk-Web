@@ -13,6 +13,7 @@ import { FormField } from "@/components/ui/form-field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { isValidEmail, messages } from "@/lib/validation";
 import { useAuth } from "@/context/auth-context";
+import { loginUser } from "@/lib/api/auth.api";
 
 type Status = "idle" | "loading" | "success";
 type Errors = Partial<Record<"email" | "password", string>>;
@@ -53,31 +54,8 @@ export function LoginForm() {
     setStatus("loading");
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
-      const response = await fetch(`${baseUrl}/api/v1/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-      const body: unknown = await response.json().catch(() => null);
-      const accessToken =
-        typeof body === "object" && body !== null && "data" in body &&
-        typeof body.data === "object" && body.data !== null &&
-        "accessToken" in body.data && typeof body.data.accessToken === "string"
-          ? body.data.accessToken
-          : null;
-
-      if (response.status !== 200 || !accessToken) {
-        const message =
-          typeof body === "object" && body !== null && "message" in body &&
-          typeof body.message === "string"
-            ? body.message
-            : "We couldn't sign you in. Please try again.";
-        throw new Error(message);
-      }
-
-      completeSignIn(accessToken);
+      const response = await loginUser({ email: email.trim(), password });
+      completeSignIn(response.data.accessToken);
       setStatus("success");
       router.replace("/dashboard");
     } catch (error) {

@@ -22,6 +22,7 @@ interface SidebarProps {
  */
 export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const { role } = useRole();
+  if (!role) return null;
   return (
     <aside
       data-collapsed={collapsed}
