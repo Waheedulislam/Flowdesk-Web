@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { RequireAuthentication } from "@/components/auth/route-guard";
+import { WorkspaceProvider } from "@/context/workspace-context";
 
 /**
  * Shared application shell for all authenticated routes: fixed sidebar,
@@ -13,7 +14,9 @@ export default function AppLayout({
 }>) {
   return (
     <RequireAuthentication>
-      <AppShell>{children}</AppShell>
+      <WorkspaceProvider>
+        <AppShell>{children}</AppShell>
+      </WorkspaceProvider>
     </RequireAuthentication>
   );
 }

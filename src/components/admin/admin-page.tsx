@@ -3,8 +3,171 @@ import { BarChart3, Plus, Search, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { mockAdminWorkspaces, mockAuditLogs, mockUsers } from "@/lib/admin-data";
+import {
+  mockAdminWorkspaces,
+  mockAuditLogs,
+  mockUsers,
+} from "@/lib/admin-data";
 
-function Table({ headers, rows }: { headers: string[]; rows: readonly (readonly string[])[] }) { return <div className="overflow-x-auto"><table className="w-full min-w-[650px] text-sm"><thead className="border-y bg-muted/50 text-left text-xs text-muted-foreground"><tr>{headers.map((item) => <th key={item} className="px-5 py-3 font-medium">{item}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index} className="border-b last:border-0">{row.map((cell, cellIndex) => <td key={cellIndex} className="whitespace-nowrap px-5 py-3.5">{cell}</td>)}</tr>)}</tbody></table></div>; }
-export function AdminPage({ type }: { type: "users" | "workspaces" | "analytics" | "audit" }) { const config = { users: { title: "Users", copy: "Manage platform users across all workspaces.", headers: ["User", "Email", "Workspace", "Role", "Status", "Last active"], rows: mockUsers }, workspaces: { title: "Workspaces", copy: "View workspace growth and account status.", headers: ["Workspace", "Owner", "Members", "Projects", "Plan", "Status", "Created"], rows: mockAdminWorkspaces }, audit: { title: "Audit Logs", copy: "Review recent platform administration activity.", headers: ["User", "Action", "Resource", "Timestamp", "Status"], rows: mockAuditLogs } } as const; if (type === "analytics") return <div className="space-y-6"><header><p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Administration</p><h1 className="mt-1 text-3xl font-semibold">System Analytics</h1><p className="mt-2 text-sm text-muted-foreground">Platform adoption and operational health.</p></header><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{[["Total users", "2,486"], ["Active users", "1,842"], ["New users", "184"], ["Active workspaces", "128"], ["Projects created", "342"], ["Tasks completed", "18,420"]].map(([label, value]) => <Card key={label}><CardContent className="p-5"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p><div className="mt-4 h-2 rounded-full bg-muted"><div className="h-full w-2/3 rounded-full bg-primary" /></div></CardContent></Card>)}</div><Card><CardHeader><CardTitle>Platform growth</CardTitle></CardHeader><CardContent><div className="flex h-48 items-end gap-3">{[38, 55, 46, 71, 64, 88, 78, 96].map((height, i) => <div key={i} className="flex-1 rounded-t bg-primary/70" style={{ height: `${height}%` }} />)}</div></CardContent></Card></div>; const page = config[type]; return <div className="space-y-6"><header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Administration</p><h1 className="mt-1 text-3xl font-semibold">{page.title}</h1><p className="mt-2 text-sm text-muted-foreground">{page.copy}</p></div>{type === "users" && <Button><Plus />Invite user</Button>}</header><Card><CardContent className="p-4"><div className="flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input className="pl-9" placeholder={`Search ${page.title.toLowerCase()}`} /></div><select className="h-9 rounded-md border border-input bg-background px-3 text-sm"><option>All statuses</option><option>Active</option><option>Paused</option></select></div></CardContent></Card><Card><CardContent className="p-0"><Table headers={[...page.headers]} rows={page.rows} /></CardContent></Card></div>;
+function Table({
+  headers,
+  rows,
+}: {
+  headers: string[];
+  rows: readonly (readonly string[])[];
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[650px] text-sm">
+        <thead className="border-y bg-muted/50 text-left text-xs text-muted-foreground">
+          <tr>
+            {headers.map((item) => (
+              <th key={item} className="px-5 py-3 font-medium">
+                {item}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={index} className="border-b last:border-0">
+              {row.map((cell, cellIndex) => (
+                <td key={cellIndex} className="whitespace-nowrap px-5 py-3.5">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function AdminPage({
+  type,
+}: {
+  type: "users" | "workspaces" | "analytics" | "audit";
+}) {
+  const config = {
+    users: {
+      title: "Users",
+      copy: "Manage platform users across all workspaces.",
+      headers: ["User", "Email", "Workspace", "Role", "Status", "Last active"],
+      rows: mockUsers,
+    },
+    workspaces: {
+      title: "Workspaces",
+      copy: "View workspace growth and account status.",
+      headers: [
+        "Workspace",
+        "Owner",
+        "Members",
+        "Projects",
+        "Plan",
+        "Status",
+        "Created",
+      ],
+      rows: mockAdminWorkspaces,
+    },
+    audit: {
+      title: "Audit Logs",
+      copy: "Review recent platform administration activity.",
+      headers: ["User", "Action", "Resource", "Timestamp", "Status"],
+      rows: mockAuditLogs,
+    },
+  } as const;
+  if (type === "analytics")
+    return (
+      <div className="space-y-6">
+        <header>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+            Administration
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold">System Analytics</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Platform adoption and operational health.
+          </p>
+        </header>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {[
+            ["Total users", "2,486"],
+            ["Active users", "1,842"],
+            ["New users", "184"],
+            ["Active workspaces", "128"],
+            ["Projects created", "342"],
+            ["Tasks completed", "18,420"],
+          ].map(([label, value]) => (
+            <Card key={label}>
+              <CardContent className="p-5">
+                <p className="text-sm text-muted-foreground">{label}</p>
+                <p className="mt-2 text-2xl font-semibold">{value}</p>
+                <div className="mt-4 h-2 rounded-full bg-muted">
+                  <div className="h-full w-2/3 rounded-full bg-primary" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Platform growth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex h-48 items-end gap-3">
+              {[38, 55, 46, 71, 64, 88, 78, 96].map((height, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t bg-primary/70"
+                  style={{ height: `${height}%` }}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  const page = config[type];
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+            Administration
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold">{page.title}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{page.copy}</p>
+        </div>
+        {type === "users" && (
+          <Button>
+            <Plus />
+            Invite user
+          </Button>
+        )}
+      </header>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder={`Search ${page.title.toLowerCase()}`}
+              />
+            </div>
+            <select className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+              <option>All statuses</option>
+              <option>Active</option>
+              <option>Paused</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-0">
+          <Table headers={[...page.headers]} rows={page.rows} />
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

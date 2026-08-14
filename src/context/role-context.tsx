@@ -11,12 +11,18 @@ const RoleContext = React.createContext<RoleContextValue | null>(null);
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  return <RoleContext.Provider value={{ role: user?.role ?? null }}>{children}</RoleContext.Provider>;
+  return (
+    <RoleContext.Provider value={{ role: user?.role ?? null }}>
+      {children}
+    </RoleContext.Provider>
+  );
 }
 
 export function useRole() {
   const context = React.useContext(RoleContext);
-  if (!context) throw new Error("useRole must be used within RoleProvider");
+  if (!context) {
+    throw new Error("useRole must be used within RoleProvider");
+  }
   return context;
 }
 

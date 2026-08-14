@@ -14,10 +14,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, getInitials } from "@/lib/utils";
-import { mockWorkspaces } from "@/lib/navigation";
-import type { Workspace } from "@/types";
 import type { DashboardSummary } from "@/lib/dashboard-data";
 import { useAuth } from "@/context/auth-context";
+import { CreateWorkspaceDialog } from "@/components/workspace/create-workspace-dialog";
+import { useWorkspace } from "@/context/workspace-context";
 
 /**
  * Dashboard header: greeting + productivity summary, a workspace selector, a
@@ -34,8 +34,8 @@ interface DashboardHeaderProps {
 
 function DashboardHeader({ summary }: DashboardHeaderProps) {
   const { user } = useAuth();
-  // TODO: Replace with the active workspace from app state / backend session.
-  const [workspace, setWorkspace] = React.useState<Workspace>(mockWorkspaces[0]);
+  const { workspaces, activeWorkspace, isLoading: isWorkspacesLoading, selectWorkspace } = useWorkspace();
+  const [createOpen, setCreateOpen] = React.useState(false);
   // TODO: Refetch dashboard analytics when the selected period changes.
   const [period, setPeriod] = React.useState<Period>("This week");
 
@@ -46,7 +46,7 @@ function DashboardHeader({ summary }: DashboardHeaderProps) {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Good to see you{user?.name ? `, ${user.name}` : ""}
           </h1>
-          <Badge variant="secondary">{workspace.name}</Badge>
+          {activeWorkspace ? <Badge variant="secondary">{activeWorkspace.name}</Badge> : null}
         </div>
         <p className="text-sm text-muted-foreground">
           {summary.headline}{" "}
@@ -57,44 +57,45 @@ function DashboardHeader({ summary }: DashboardHeaderProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        {/* Workspace selector */}
+        {/* TODO: Persist the selected workspace when the backend exposes a current-workspace endpoint. */}
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label="Switch workspace"
+            disabled={isWorkspacesLoading}
             className={cn(
               "inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors",
               "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             )}
           >
             <span className="flex size-5 shrink-0 items-center justify-center rounded bg-primary/12 text-[0.625rem] font-semibold text-primary">
-              {getInitials(workspace.name)}
+              {activeWorkspace ? getInitials(activeWorkspace.name) : "?"}
             </span>
-            <span className="max-w-32 truncate font-medium">{workspace.name}</span>
+            <span className="max-w-32 truncate font-medium">{activeWorkspace?.name ?? (isWorkspacesLoading ? "Loadingâ€¦" : "No workspace")}</span>
             <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-60">
             <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
-            {mockWorkspaces.map((ws) => (
+            {workspaces.map((workspace) => (
               <DropdownMenuItem
-                key={ws.id}
-                onClick={() => setWorkspace(ws)}
+                key={workspace.id}
+                onClick={() => selectWorkspace(workspace.id)}
                 className="gap-2.5"
               >
                 <span className="flex size-6 shrink-0 items-center justify-center rounded bg-primary/12 text-[0.625rem] font-semibold text-primary">
-                  {getInitials(ws.name)}
+                  {getInitials(workspace.name)}
                 </span>
-                <span className="truncate font-medium">{ws.name}</span>
+                <span className="truncate font-medium">{workspace.name}</span>
                 <Badge variant="secondary" className="ml-auto">
-                  {ws.plan}
+                  {workspace.role}
                 </Badge>
-                {workspace.id === ws.id ? (
+                {activeWorkspace?.id === workspace.id ? (
                   <Check className="size-4 shrink-0 text-primary" />
                 ) : null}
               </DropdownMenuItem>
             ))}
+            {!isWorkspacesLoading && workspaces.length === 0 ? <DropdownMenuItem disabled>No workspaces yet</DropdownMenuItem> : null}
             <DropdownMenuSeparator />
-            {/* TODO: Connect to workspace creation flow. */}
-            <DropdownMenuItem className="text-muted-foreground">
+            <DropdownMenuItem className="text-muted-foreground" onClick={() => setCreateOpen(true)}>
               <Plus />
               Create workspace
             </DropdownMenuItem>
@@ -131,6 +132,7 @@ function DashboardHeader({ summary }: DashboardHeaderProps) {
           New project
         </Button>
       </div>
+      <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

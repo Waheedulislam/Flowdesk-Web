@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
-import type { WorkspaceOverview } from "@/components/workspace/workspace-page";
+import type { WorkspaceOverviewModel } from "@/components/workspace/workspace-overview";
 
 interface WorkspaceHeaderProps {
-  workspace: WorkspaceOverview;
+  workspace: WorkspaceOverviewModel;
 }
 
 export function WorkspaceHeader({ workspace }: WorkspaceHeaderProps) {

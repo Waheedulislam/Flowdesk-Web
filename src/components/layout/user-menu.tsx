@@ -20,7 +20,11 @@ import { useAuth } from "@/context/auth-context";
 /**
  * Account menu in the navbar. All actions are UI-only placeholders.
  */
-export function UserMenu({ signOutRedirect = "/login" }: { signOutRedirect?: string | null }) {
+export function UserMenu({
+  signOutRedirect = "/login",
+}: {
+  signOutRedirect?: string | null;
+}) {
   const { role } = useRole();
   const router = useRouter();
   const { signOut, user } = useAuth();
@@ -33,14 +37,24 @@ export function UserMenu({ signOutRedirect = "/login" }: { signOutRedirect?: str
           "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         )}
       >
-        <Avatar name={user?.name ?? "Account"} src={user?.avatar ?? undefined} className="size-8" />
+        <Avatar
+          name={user?.name ?? "Account"}
+          src={user?.avatar ?? undefined}
+          className="size-8"
+        />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="min-w-60">
         <div className="flex items-center gap-2.5 p-2">
-          <Avatar name={user?.name ?? "Account"} src={user?.avatar ?? undefined} className="size-9" />
+          <Avatar
+            name={user?.name ?? "Account"}
+            src={user?.avatar ?? undefined}
+            className="size-9"
+          />
           <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-medium">{user?.name ?? "Account"}</span>
+            <span className="truncate text-sm font-medium">
+              {user?.name ?? "Account"}
+            </span>
             <span className="truncate text-xs text-muted-foreground">
               {user?.email ?? ""}
             </span>

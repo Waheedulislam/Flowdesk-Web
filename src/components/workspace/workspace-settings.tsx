@@ -1,36 +1,22 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, CheckCircle2, Loader2, Upload } from "lucide-react";
+import { AlertTriangle, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { WorkspaceOverview } from "@/components/workspace/workspace-page";
+import type { WorkspaceOverviewModel } from "@/components/workspace/workspace-overview";
 
 interface WorkspaceSettingsProps {
-  workspace: WorkspaceOverview;
+  workspace: WorkspaceOverviewModel;
 }
 
 export function WorkspaceSettings({ workspace }: WorkspaceSettingsProps) {
   const [name, setName] = React.useState(workspace.name);
   const [description, setDescription] = React.useState(workspace.description);
   const [status, setStatus] = React.useState(workspace.status);
-  const [loading, setLoading] = React.useState(false);
-  const [message, setMessage] = React.useState<string | null>(null);
-  const [hasError, setHasError] = React.useState(false);
-
-  const handleSave = async () => {
-    setLoading(true);
-    setHasError(false);
-    setMessage(null);
-
-    // TODO: Connect workspace update API.
-    await new Promise((resolve) => window.setTimeout(resolve, 800));
-    setLoading(false);
-    setMessage("Workspace updated successfully.");
-  };
 
   return (
     <div className="space-y-4">
@@ -85,31 +71,13 @@ export function WorkspaceSettings({ workspace }: WorkspaceSettingsProps) {
             </div>
           </div>
 
-          {message ? (
-            <div
-              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${hasError ? "border-destructive/20 bg-destructive/10 text-destructive" : "border-success/20 bg-success/10 text-success"}`}
-            >
-              {hasError ? (
-                <AlertTriangle className="size-4" />
-              ) : (
-                <CheckCircle2 className="size-4" />
-              )}
-              {message}
-            </div>
-          ) : null}
+          <div className="rounded-lg border border-info/30 bg-info/10 px-3 py-2 text-sm text-info">
+            Workspace updates are unavailable until the backend provides an update endpoint.
+          </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline">Cancel</Button>
-            <Button onClick={handleSave} disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save changes"
-              )}
-            </Button>
+            <Button variant="outline" disabled>Cancel</Button>
+            <Button disabled>Save changes</Button>
           </div>
         </CardContent>
       </Card>

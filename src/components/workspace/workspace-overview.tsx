@@ -4,6 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { WorkspaceActivityItem } from "@/lib/workspace-data";
 
+/** Legacy presentation-only shape used by unrendered workspace fixture components. */
+export type WorkspaceOverviewModel = {
+  name: string;
+  description: string;
+  status: string;
+  ownerName: string;
+  ownerEmail: string;
+  memberCount: number;
+  projectCount: number;
+};
+
 interface WorkspaceOverviewProps {
   activity: WorkspaceActivityItem[];
 }
