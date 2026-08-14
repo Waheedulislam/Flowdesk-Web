@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useMockAuth } from "@/context/mock-auth-context";
+import { useAuth } from "@/context/auth-context";
 
 function RedirectingNotice({ destination }: { destination: string }) {
   return (
@@ -14,29 +14,32 @@ function RedirectingNotice({ destination }: { destination: string }) {
 
 /**
  * Single guard for every page within the private `(app)` route group.
- * TODO: Replace this client guard with server-side session protection in Phase 14.
+ * TODO: Replace this client guard with server-side session protection when the
+ * backend provides a server-readable session contract.
  */
-export function RequireMockAuthentication({ children }: { children: React.ReactNode }) {
+export function RequireAuthentication({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isAuthenticated } = useMockAuth();
+  const { isAuthenticated, isReady } = useAuth();
 
   React.useEffect(() => {
-    if (!isAuthenticated) router.replace("/login");
-  }, [isAuthenticated, router]);
+    if (isReady && !isAuthenticated) router.replace("/login");
+  }, [isAuthenticated, isReady, router]);
 
+  if (!isReady) return <RedirectingNotice destination="your session" />;
   if (!isAuthenticated) return <RedirectingNotice destination="login" />;
   return <>{children}</>;
 }
 
-/** Keeps the login route out of the way once a mock session exists. */
+/** Keeps auth routes out of the way once a session exists. */
 export function RedirectAuthenticatedUser({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isAuthenticated } = useMockAuth();
+  const { isAuthenticated, isReady } = useAuth();
 
   React.useEffect(() => {
-    if (isAuthenticated) router.replace("/dashboard");
-  }, [isAuthenticated, router]);
+    if (isReady && isAuthenticated) router.replace("/dashboard");
+  }, [isAuthenticated, isReady, router]);
 
+  if (!isReady) return <RedirectingNotice destination="your session" />;
   if (isAuthenticated) return <RedirectingNotice destination="dashboard" />;
   return <>{children}</>;
 }

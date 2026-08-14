@@ -12,14 +12,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { FormField } from "@/components/ui/form-field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { isValidEmail, messages } from "@/lib/validation";
-import { useMockAuth } from "@/context/mock-auth-context";
+import { useAuth } from "@/context/auth-context";
 
 type Status = "idle" | "loading" | "success";
 type Errors = Partial<Record<"email" | "password", string>>;
 
 export function LoginForm() {
   const router = useRouter();
-  const { completeMockSignIn } = useMockAuth();
+  const { completeSignIn } = useAuth();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [remember, setRemember] = React.useState(true);
@@ -31,12 +31,6 @@ export function LoginForm() {
   const done = status === "success";
   const disabled = loading || done;
 
-  React.useEffect(() => {
-    if (!done) return;
-    completeMockSignIn();
-    router.replace("/dashboard");
-  }, [completeMockSignIn, done, router]);
-
   function validate(): Errors {
     const next: Errors = {};
     if (!email.trim()) next.email = messages.emailRequired;
@@ -45,7 +39,7 @@ export function LoginForm() {
     return next;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
 
@@ -57,14 +51,43 @@ export function LoginForm() {
     }
 
     setStatus("loading");
-    // TODO: Connect login form to the backend auth API.
-    // TODO: Replace completeMockSignIn with a real authenticated session.
-    //   const res = await signIn({ email, password, remember });
-    //   On failure: setStatus("idle"); setFormError(res.message).
-    //   On success: redirect to the dashboard.
-    // The timeout below only demonstrates the loading and success UI and
-    // must be removed once the real request is wired up.
-    window.setTimeout(() => setStatus("success"), 1100);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+      const response = await fetch(`${baseUrl}/api/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const body: unknown = await response.json().catch(() => null);
+      const accessToken =
+        typeof body === "object" && body !== null && "data" in body &&
+        typeof body.data === "object" && body.data !== null &&
+        "accessToken" in body.data && typeof body.data.accessToken === "string"
+          ? body.data.accessToken
+          : null;
+
+      if (response.status !== 200 || !accessToken) {
+        const message =
+          typeof body === "object" && body !== null && "message" in body &&
+          typeof body.message === "string"
+            ? body.message
+            : "We couldn't sign you in. Please try again.";
+        throw new Error(message);
+      }
+
+      completeSignIn(accessToken);
+      setStatus("success");
+      router.replace("/dashboard");
+    } catch (error) {
+      setStatus("idle");
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "We couldn't sign you in. Please try again.",
+      );
+    }
   }
 
   return (

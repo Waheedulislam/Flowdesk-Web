@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ type Errors = Partial<
 >;
 
 export function RegisterForm() {
+  const router = useRouter();
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -45,7 +47,17 @@ export function RegisterForm() {
     return next;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  React.useEffect(() => {
+    if (!done) return;
+
+    const redirectTimer = window.setTimeout(() => {
+      router.replace("/login");
+    }, 1500);
+
+    return () => window.clearTimeout(redirectTimer);
+  }, [done, router]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
 
@@ -57,29 +69,43 @@ export function RegisterForm() {
     }
 
     setStatus("loading");
-    // TODO: Connect register form to the backend auth API.
-    //   const res = await register({ name, email, password });
-    //   On failure: setStatus("idle"); setFormError(res.message).
-    //   On success: send a verification email / redirect to onboarding.
-    // The timeout below only demonstrates the loading and success UI and
-    // must be removed once the real request is wired up.
-    window.setTimeout(() => setStatus("success"), 1100);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+      const response = await fetch(`${baseUrl}/api/v1/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
+      });
+
+      if (response.status !== 201) {
+        const body: unknown = await response.json().catch(() => null);
+        const message =
+          typeof body === "object" && body !== null && "message" in body &&
+          typeof body.message === "string"
+            ? body.message
+            : "We couldn't create your account. Please try again.";
+        throw new Error(message);
+      }
+
+      // The register endpoint returns a profile, not an authenticated session.
+      // TODO: Revisit this redirect if the backend registration contract changes.
+      setStatus("success");
+    } catch (error) {
+      setStatus("idle");
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "We couldn't create your account. Please try again.",
+      );
+    }
   }
 
   if (done) {
     return (
       <Alert variant="success" title="Account created">
-        We&apos;ve sent a verification link to{" "}
-        <span className="font-medium">{email}</span>. Confirm your email to
-        finish setting up your workspace.
-        <div className="mt-3">
-          <Link
-            href="/login"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Back to sign in
-          </Link>
-        </div>
+        Your account has been created. Redirecting you to sign in…
       </Alert>
     );
   }

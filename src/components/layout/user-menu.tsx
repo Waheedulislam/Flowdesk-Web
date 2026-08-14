@@ -17,6 +17,7 @@ import { RoleBadge } from "@/components/roles/role-badge";
 import { RoleSwitcher } from "@/components/roles/role-switcher";
 import { useRole } from "@/context/role-context";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
 
 /**
  * Account menu in the navbar. All actions are UI-only placeholders.
@@ -24,6 +25,7 @@ import { useRouter } from "next/navigation";
 export function UserMenu() {
   const { role } = useRole();
   const router = useRouter();
+  const { signOut } = useAuth();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -64,8 +66,13 @@ export function UserMenu() {
           Billing
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {/* TODO: Connect sign-out authentication logic */}
-        <DropdownMenuItem variant="destructive">
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={() => {
+            signOut();
+            router.replace("/login");
+          }}
+        >
           <LogOut />
           Sign out
         </DropdownMenuItem>
