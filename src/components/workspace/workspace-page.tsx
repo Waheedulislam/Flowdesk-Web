@@ -22,6 +22,8 @@ import {
   workspaceStats,
 } from "@/lib/workspace-data";
 import type { MemberRole, WorkspaceMember } from "@/lib/workspace-data";
+import { useAuth } from "@/context/auth-context";
+import { getWorkspaces, type Workspace } from "@/lib/api/workspace.api";
 
 export interface WorkspaceOverview {
   name: string;
@@ -46,6 +48,13 @@ export function WorkspacePage() {
   const [activeTab, setActiveTab] = React.useState<
     "overview" | "members" | "settings"
   >("overview");
+
+  const { accessToken } = useAuth();
+  const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
+  const [workspaceLoading, setWorkspaceLoading] = React.useState(true);
+  const [workspaceError, setWorkspaceError] = React.useState<string | null>(
+    null,
+  );
 
   const openRoleDialog = (member: WorkspaceMember) => {
     setSelectedMember(member);

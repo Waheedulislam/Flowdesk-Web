@@ -46,18 +46,65 @@ export function getWorkspaces(accessToken: string) {
 }
 
 export function getWorkspaceBySlug(accessToken: string, slug: string) {
-  return apiClient<WorkspaceDetail>(`/api/v1/workspaces/${encodeURIComponent(slug)}`, {
-    method: "GET",
-    accessToken,
-    expectedStatuses: 200,
-  });
+  return apiClient<WorkspaceDetail>(
+    `/api/v1/workspaces/${encodeURIComponent(slug)}`,
+    {
+      method: "GET",
+      accessToken,
+      expectedStatuses: 200,
+    },
+  );
 }
 
-export function createWorkspace(accessToken: string, payload: CreateWorkspacePayload) {
+export function createWorkspace(
+  accessToken: string,
+  payload: CreateWorkspacePayload,
+) {
   return apiClient<WorkspaceRecord>("/api/v1/workspaces/create-workspaces", {
     method: "POST",
     accessToken,
     body: payload,
     expectedStatuses: 201,
+  });
+}
+
+export type UpdateMemberRolePayload = {
+  role: WorkspaceMemberRole;
+};
+
+export function updateMemberRole(
+  accessToken: string,
+  workspaceId: string,
+  memberId: string,
+  payload: UpdateMemberRolePayload,
+) {
+  return apiClient(
+    `/api/v1/workspaces/${workspaceId}/members/${memberId}/role`,
+    {
+      method: "PATCH",
+      accessToken,
+      body: payload,
+      expectedStatuses: 200,
+    },
+  );
+}
+
+export function removeMember(
+  accessToken: string,
+  workspaceId: string,
+  memberId: string,
+) {
+  return apiClient(`/api/v1/workspaces/${workspaceId}/members/${memberId}`, {
+    method: "DELETE",
+    accessToken,
+    expectedStatuses: 200,
+  });
+}
+
+export function leaveWorkspace(accessToken: string, workspaceId: string) {
+  return apiClient(`/api/v1/workspaces/${workspaceId}/leave`, {
+    method: "POST",
+    accessToken,
+    expectedStatuses: 200,
   });
 }
