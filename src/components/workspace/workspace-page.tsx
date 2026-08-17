@@ -74,100 +74,63 @@ export function WorkspacePage() {
   // ------------------------------------------------------------
   // LOAD REAL WORKSPACES
   // ------------------------------------------------------------
-  React.useEffect(() => {
-    if (!isReady || !accessToken) {
-      return;
-    }
+React.useEffect(() => {
+  if (!isReady || !accessToken) {
+    return;
+  }
 
-    const token = accessToken;
-    let cancelled = false;
+  const token = accessToken;
+  let cancelled = false;
 
-    async function loadWorkspaces() {
-      setWorkspaceLoading(true);
-      setWorkspaceError(null);
+  async function loadWorkspace() {
+    setWorkspaceLoading(true);
+    setWorkspaceError(null);
 
-      try {
-        const response = await getWorkspaces(token);
+    try {
+      // 1. Get user's workspaces
+      const workspacesResponse = await getWorkspaces(token);
 
-        if (!cancelled) {
-          setWorkspaces(response.data);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setWorkspaceError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load workspaces.",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setWorkspaceLoading(false);
-        }
+      if (cancelled) return;
+
+      setWorkspaces(workspacesResponse.data);
+
+      // No workspace
+      if (workspacesResponse.data.length === 0) {
+        return;
+      }
+
+      // 2. Get the first workspace's full details
+      const workspace = workspacesResponse.data[0];
+
+      const detailResponse = await getWorkspaceBySlug(
+        token,
+        workspace.slug,
+      );
+
+      if (!cancelled) {
+        setWorkspaceDetail(detailResponse.data);
+      }
+    } catch (error) {
+      if (!cancelled) {
+        setWorkspaceError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load workspace.",
+        );
+      }
+    } finally {
+      if (!cancelled) {
+        setWorkspaceLoading(false);
       }
     }
+  }
 
-    void loadWorkspaces();
+  void loadWorkspace();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [accessToken, isReady]);
-
-  // Workspace --------------
-
-  React.useEffect(() => {
-    if (!isReady || !accessToken) {
-      return;
-    }
-
-    const token = accessToken;
-    let cancelled = false;
-
-    async function loadWorkspace() {
-      setWorkspaceLoading(true);
-      setWorkspaceError(null);
-
-      try {
-        const response = await getWorkspaces(token);
-
-        if (cancelled) return;
-
-        setWorkspaces(response.data);
-
-        if (response.data.length === 0) {
-          return;
-        }
-
-        const workspace = response.data[0];
-
-        const detailResponse = await getWorkspaceBySlug(token, workspace.slug);
-
-        if (!cancelled) {
-          setWorkspaceDetail(detailResponse.data);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setWorkspaceError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load workspace.",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setWorkspaceLoading(false);
-        }
-      }
-    }
-
-    void loadWorkspace();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [accessToken, isReady]);
-
+  return () => {
+    cancelled = true;
+  };
+}, [accessToken, isReady]);
   // ------------------------------------------------------------
   // MEMBER ROLE
   // ------------------------------------------------------------
