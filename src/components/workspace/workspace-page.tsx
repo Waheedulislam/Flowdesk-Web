@@ -27,7 +27,12 @@ import type { MemberRole, WorkspaceMember } from "@/lib/workspace-data";
 
 import { useAuth } from "@/context/auth-context";
 
-import { getWorkspaces, type Workspace } from "@/lib/api/workspace.api";
+import {
+  getWorkspaces,
+  type Workspace,
+  getWorkspaceBySlug,
+  type WorkspaceDetail,
+} from "@/lib/api/workspace.api";
 
 export interface WorkspaceOverview {
   name: string;
@@ -49,6 +54,8 @@ export function WorkspacePage() {
   const [workspaceError, setWorkspaceError] = React.useState<string | null>(
     null,
   );
+  const [workspaceDetail, setWorkspaceDetail] =
+    React.useState<WorkspaceDetail | null>(null);
   // ------------------------------------------------------------
   // EXISTING MEMBER / INVITATION UI STATE
   // These will be connected to real APIs later.
@@ -101,6 +108,60 @@ export function WorkspacePage() {
     }
 
     void loadWorkspaces();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, isReady]);
+
+  // Workspace --------------
+
+  React.useEffect(() => {
+    if (!isReady || !accessToken) {
+      return;
+    }
+
+    const token = accessToken;
+    let cancelled = false;
+
+    async function loadWorkspace() {
+      setWorkspaceLoading(true);
+      setWorkspaceError(null);
+
+      try {
+        const response = await getWorkspaces(token);
+
+        if (cancelled) return;
+
+        setWorkspaces(response.data);
+
+        if (response.data.length === 0) {
+          return;
+        }
+
+        const workspace = response.data[0];
+
+        const detailResponse = await getWorkspaceBySlug(token, workspace.slug);
+
+        if (!cancelled) {
+          setWorkspaceDetail(detailResponse.data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setWorkspaceError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load workspace.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setWorkspaceLoading(false);
+        }
+      }
+    }
+
+    void loadWorkspace();
 
     return () => {
       cancelled = true;
@@ -228,21 +289,23 @@ export function WorkspacePage() {
   }
 
   // CURRENT WORKSPACE
-  const currentWorkspace = workspaces[0];
+  const currentWorkspace = workspaceDetail ?? workspaces[0];
 
-  // ------------------------------------------------------------
-  // REAL WORKSPACE OVERVIEW
-  // ------------------------------------------------------------
   const overviewData: WorkspaceOverview = {
     name: currentWorkspace.name,
+
     description: currentWorkspace.description ?? "",
+
     logoLabel: currentWorkspace.logo ?? currentWorkspace.name,
+
     status: currentWorkspace.status,
-    // Owner details will become real after
-    // GET /api/v1/workspaces/:slug
-    ownerName: "Workspace Owner",
-    ownerEmail: "",
+
+    ownerName: workspaceDetail?.owner.name ?? "Workspace Owner",
+
+    ownerEmail: workspaceDetail?.owner.email ?? "",
+
     memberCount: members.length,
+
     projectCount: 0,
   };
 
