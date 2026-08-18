@@ -23,7 +23,7 @@ import {
   workspaceStats,
 } from "@/lib/workspace-data";
 
-import type { MemberRole, WorkspaceMember } from "@/lib/workspace-data";
+import type { MemberRole } from "@/lib/workspace-data";
 
 import { useAuth } from "@/context/auth-context";
 import { useWorkspace } from "@/context/workspace-context";
@@ -31,8 +31,10 @@ import { useWorkspace } from "@/context/workspace-context";
 import {
   getWorkspaceBySlug,
   getWorkspaceMembers,
+  updateMemberRole,
   type WorkspaceDetail,
   type WorkspaceMemberRecord,
+  type WorkspaceMemberRole,
 } from "@/lib/api/workspace.api";
 
 export interface WorkspaceOverview {
@@ -76,7 +78,7 @@ export function WorkspacePage() {
   >(null);
 
   /* ============================================================
-     REAL MEMBERS
+     MEMBERS
   ============================================================ */
 
   const [members, setMembers] = React.useState<WorkspaceMemberRecord[]>([]);
@@ -87,17 +89,16 @@ export function WorkspacePage() {
 
   /* ============================================================
      INVITATIONS
-     TEMPORARY — WILL CONNECT TO API LATER
   ============================================================ */
 
   const [invitations, setInvitations] = React.useState(initialInvitations);
 
   /* ============================================================
-     MEMBER DIALOG STATE
+     DIALOG STATE
   ============================================================ */
 
   const [selectedMember, setSelectedMember] =
-    React.useState<WorkspaceMember | null>(null);
+    React.useState<WorkspaceMemberRecord | null>(null);
 
   const [roleDialogOpen, setRoleDialogOpen] = React.useState(false);
 
@@ -108,14 +109,21 @@ export function WorkspacePage() {
   const [createWorkspaceDialogOpen, setCreateWorkspaceDialogOpen] =
     React.useState(false);
 
-  const [pendingRole, setPendingRole] = React.useState<MemberRole>("MEMBER");
+  const [pendingRole, setPendingRole] =
+    React.useState<WorkspaceMemberRole>("MEMBER");
+
+  const [roleUpdating, setRoleUpdating] = React.useState(false);
+
+  const [roleUpdateError, setRoleUpdateError] = React.useState<string | null>(
+    null,
+  );
 
   const [activeTab, setActiveTab] = React.useState<
     "overview" | "members" | "settings"
   >("overview");
 
   /* ============================================================
-     LOAD ACTIVE WORKSPACE DETAIL
+     LOAD WORKSPACE DETAIL
   ============================================================ */
 
   React.useEffect(() => {
@@ -155,7 +163,7 @@ export function WorkspacePage() {
   }, [accessToken, activeWorkspace?.slug, isReady]);
 
   /* ============================================================
-     LOAD REAL WORKSPACE MEMBERS
+     LOAD MEMBERS
   ============================================================ */
 
   React.useEffect(() => {
@@ -203,49 +211,106 @@ export function WorkspacePage() {
   }, [accessToken, activeWorkspace?.id, isReady]);
 
   /* ============================================================
-     ROLE DIALOG
+     OPEN ROLE DIALOG
   ============================================================ */
 
-  const openRoleDialog = (member: WorkspaceMember) => {
+  const openRoleDialog = (member: WorkspaceMemberRecord) => {
+    // OWNER cannot be changed
+    if (member.role === "OWNER") {
+      return;
+    }
+
     setSelectedMember(member);
     setPendingRole(member.role);
+    setRoleUpdateError(null);
     setRoleDialogOpen(true);
   };
 
-  /*
-   * REAL ROLE UPDATE WILL BE CONNECTED NEXT.
-   *
-   * For now we only close the dialog.
-   */
+  /* ============================================================
+     UPDATE ROLE
+  ============================================================ */
 
-  const confirmRoleChange = () => {
-    if (!selectedMember) return;
+  const confirmRoleChange = async () => {
+    if (!selectedMember || !accessToken || !activeWorkspace?.id) {
+      return;
+    }
 
-    setRoleDialogOpen(false);
+    // Never allow OWNER from frontend
+    if (pendingRole === "OWNER") {
+      setRoleUpdateError("Owner role cannot be assigned.");
+      return;
+    }
+
+    // Nothing changed
+    if (pendingRole === selectedMember.role) {
+      setRoleDialogOpen(false);
+      return;
+    }
+
+    setRoleUpdating(true);
+    setRoleUpdateError(null);
+
+    try {
+      const response = await updateMemberRole(
+        accessToken,
+        activeWorkspace.id,
+        selectedMember.id,
+        {
+          role: pendingRole,
+        },
+      );
+
+      // Update member locally
+      setMembers((current) =>
+        current.map((member) =>
+          member.id === selectedMember.id
+            ? {
+                ...member,
+                role: pendingRole,
+              }
+            : member,
+        ),
+      );
+
+      setSelectedMember(null);
+      setRoleDialogOpen(false);
+    } catch (error) {
+      setRoleUpdateError(
+        error instanceof Error
+          ? error.message
+          : "Failed to update member role.",
+      );
+    } finally {
+      setRoleUpdating(false);
+    }
   };
 
   /* ============================================================
-     REMOVE MEMBER
+     OPEN REMOVE DIALOG
   ============================================================ */
 
-  const openRemoveDialog = (member: WorkspaceMember) => {
+  const openRemoveDialog = (member: WorkspaceMemberRecord) => {
+    // OWNER cannot be removed
+    if (member.role === "OWNER") {
+      return;
+    }
+
     setSelectedMember(member);
     setRemoveDialogOpen(true);
   };
 
-  /*
-   * REAL DELETE API WILL BE CONNECTED NEXT.
-   */
+  /* ============================================================
+     MEMBER REMOVED
+  ============================================================ */
 
-  const handleRemoveMember = () => {
-    if (!selectedMember) return;
+  const handleMemberRemoved = (memberId: string) => {
+    setMembers((current) => current.filter((member) => member.id !== memberId));
 
-    setRemoveDialogOpen(false);
+    setSelectedMember(null);
   };
 
   /* ============================================================
      INVITATION
-     TEMPORARY
   ============================================================ */
 
   const handleInviteSent = (email: string, role: MemberRole) => {
@@ -263,7 +328,7 @@ export function WorkspacePage() {
   };
 
   /* ============================================================
-     AUTH / INITIAL LOADING
+     INITIAL LOADING
   ============================================================ */
 
   if (!isReady || workspaceLoading) {
@@ -275,7 +340,7 @@ export function WorkspacePage() {
   }
 
   /* ============================================================
-     WORKSPACE ERROR
+     ERROR
   ============================================================ */
 
   const workspaceError = workspaceListError || workspaceDetailError;
@@ -341,7 +406,7 @@ export function WorkspacePage() {
   const currentWorkspace = workspaceDetail ?? activeWorkspace;
 
   /* ============================================================
-     OVERVIEW DATA
+     OVERVIEW
   ============================================================ */
 
   const overviewData: WorkspaceOverview = {
@@ -368,9 +433,7 @@ export function WorkspacePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ======================================================
-          HEADER
-      ====================================================== */}
+      {/* HEADER */}
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -401,9 +464,7 @@ export function WorkspacePage() {
         </div>
       </div>
 
-      {/* ======================================================
-          TABS
-      ====================================================== */}
+      {/* TABS */}
 
       <div className="flex flex-wrap gap-2">
         {[
@@ -437,15 +498,11 @@ export function WorkspacePage() {
         ))}
       </div>
 
-      {/* ======================================================
-          WORKSPACE HEADER
-      ====================================================== */}
+      {/* WORKSPACE HEADER */}
 
       <WorkspaceHeader workspace={overviewData} />
 
-      {/* ======================================================
-          OVERVIEW
-      ====================================================== */}
+      {/* OVERVIEW */}
 
       {activeTab === "overview" ? (
         <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
@@ -517,9 +574,7 @@ export function WorkspacePage() {
         </div>
       ) : null}
 
-      {/* ======================================================
-          MEMBERS
-      ====================================================== */}
+      {/* MEMBERS */}
 
       {activeTab === "members" ? (
         <div className="space-y-6">
@@ -543,8 +598,6 @@ export function WorkspacePage() {
             </CardHeader>
           </Card>
 
-          {/* MEMBER LOADING */}
-
           {membersLoading ? (
             <Card>
               <CardContent className="flex min-h-[180px] items-center justify-center">
@@ -566,6 +619,7 @@ export function WorkspacePage() {
           ) : (
             <MemberTable
               members={members}
+              currentUserRole={currentWorkspace.role}
               onOpenRoleDialog={openRoleDialog}
               onOpenRemoveDialog={openRemoveDialog}
             />
@@ -575,17 +629,13 @@ export function WorkspacePage() {
         </div>
       ) : null}
 
-      {/* ======================================================
-          SETTINGS
-      ====================================================== */}
+      {/* SETTINGS */}
 
       {activeTab === "settings" ? (
         <WorkspaceSettings workspace={overviewData} />
       ) : null}
 
-      {/* ======================================================
-          INVITE
-      ====================================================== */}
+      {/* INVITE */}
 
       <InviteMemberDialog
         open={inviteDialogOpen}
@@ -593,18 +643,14 @@ export function WorkspacePage() {
         onInviteSent={handleInviteSent}
       />
 
-      {/* ======================================================
-          CREATE WORKSPACE
-      ====================================================== */}
+      {/* CREATE WORKSPACE */}
 
       <CreateWorkspaceDialog
         open={createWorkspaceDialogOpen}
         onOpenChange={setCreateWorkspaceDialogOpen}
       />
 
-      {/* ======================================================
-          MOBILE
-      ====================================================== */}
+      {/* MOBILE */}
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 p-3 backdrop-blur md:hidden">
         <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm">
@@ -616,9 +662,7 @@ export function WorkspacePage() {
         </div>
       </div>
 
-      {/* ======================================================
-          ROLE DIALOG
-      ====================================================== */}
+      {/* ROLE DIALOG */}
 
       {roleDialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-3 backdrop-blur-sm">
@@ -627,41 +671,58 @@ export function WorkspacePage() {
               <CardTitle>Change role</CardTitle>
 
               <p className="text-sm text-muted-foreground">
-                Adjust access for {selectedMember?.name}.
+                Adjust access for{" "}
+                <span className="font-medium text-foreground">
+                  {selectedMember?.user.name}
+                </span>
+                .
               </p>
             </CardHeader>
 
             <CardContent className="space-y-4">
-              <RoleSelector value={pendingRole} onChange={setPendingRole} />
+              <RoleSelector
+                value={pendingRole}
+                onChange={setPendingRole}
+                disabled={roleUpdating}
+              />
 
               <div className="rounded-lg border border-border/70 bg-muted/40 p-3 text-sm text-muted-foreground">
-                {roleDescriptions[pendingRole]}
+                {roleDescriptions[pendingRole as MemberRole] ??
+                  "Manage workspace access for this member."}
               </div>
+
+              {roleUpdateError ? (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                  {roleUpdateError}
+                </div>
+              ) : null}
 
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setRoleDialogOpen(false)}
+                  disabled={roleUpdating}
                 >
                   Cancel
                 </Button>
 
-                <Button onClick={confirmRoleChange}>Save role</Button>
+                <Button onClick={confirmRoleChange} disabled={roleUpdating}>
+                  {roleUpdating ? "Saving..." : "Save role"}
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       ) : null}
 
-      {/* ======================================================
-          REMOVE MEMBER
-      ====================================================== */}
+      {/* REMOVE MEMBER */}
 
       <RemoveMemberDialog
         member={selectedMember}
+        workspaceId={activeWorkspace.id}
         open={removeDialogOpen}
         onOpenChange={setRemoveDialogOpen}
-        onConfirm={handleRemoveMember}
+        onSuccess={handleMemberRemoved}
       />
     </div>
   );
