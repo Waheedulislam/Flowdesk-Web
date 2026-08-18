@@ -4,7 +4,7 @@ export type WorkspaceStatus = "ACTIVE" | "ARCHIVED";
 export type WorkspaceMemberRole = "OWNER" | "ADMIN" | "MEMBER" | "GUEST";
 
 /** Workspace shape returned by `GET /api/v1/workspaces`. */
-type WorkspaceRecord = {
+export type WorkspaceRecord = {
   id: string;
   name: string;
   slug: string;
@@ -55,7 +55,33 @@ export function getWorkspaceBySlug(accessToken: string, slug: string) {
     },
   );
 }
+export type WorkspaceMemberRecord = {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  role: WorkspaceMemberRole;
+  joinedAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+    designation: string | null;
+    jobTitle: string | null;
+    status: string;
+  };
+};
 
+export function getWorkspaceMembers(accessToken: string, workspaceId: string) {
+  return apiClient<WorkspaceMemberRecord[]>(
+    `/api/v1/workspaces/${workspaceId}/members`,
+    {
+      method: "GET",
+      accessToken,
+      expectedStatuses: 200,
+    },
+  );
+}
 export function createWorkspace(
   accessToken: string,
   payload: CreateWorkspacePayload,

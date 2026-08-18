@@ -14,10 +14,10 @@ import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { WorkspaceOverview as WorkspaceActivityPanel } from "@/components/workspace/workspace-overview";
 import { WorkspaceSettings } from "@/components/workspace/workspace-settings";
 import { WorkspaceStats } from "@/components/workspace/workspace-stats";
+import { CreateWorkspaceDialog } from "@/components/workspace/create-workspace-dialog";
 
 import {
   initialInvitations,
-  initialMembers,
   roleDescriptions,
   workspaceActivity,
   workspaceStats,
@@ -26,12 +26,13 @@ import {
 import type { MemberRole, WorkspaceMember } from "@/lib/workspace-data";
 
 import { useAuth } from "@/context/auth-context";
+import { useWorkspace } from "@/context/workspace-context";
 
 import {
-  getWorkspaces,
-  type Workspace,
   getWorkspaceBySlug,
+  getWorkspaceMembers,
   type WorkspaceDetail,
+  type WorkspaceMemberRecord,
 } from "@/lib/api/workspace.api";
 
 export interface WorkspaceOverview {
@@ -46,94 +47,164 @@ export interface WorkspaceOverview {
 }
 
 export function WorkspacePage() {
-  // AUTH
+  /* ============================================================
+     AUTH
+  ============================================================ */
+
   const { accessToken, isReady } = useAuth();
-  // REAL WORKSPACE DATA
-  const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
-  const [workspaceLoading, setWorkspaceLoading] = React.useState(false);
-  const [workspaceError, setWorkspaceError] = React.useState<string | null>(
-    null,
-  );
+
+  /* ============================================================
+     WORKSPACE CONTEXT
+  ============================================================ */
+
+  const {
+    workspaces,
+    activeWorkspace,
+    isLoading: workspaceLoading,
+    error: workspaceListError,
+  } = useWorkspace();
+
+  /* ============================================================
+     WORKSPACE DETAIL
+  ============================================================ */
+
   const [workspaceDetail, setWorkspaceDetail] =
     React.useState<WorkspaceDetail | null>(null);
-  // ------------------------------------------------------------
-  // EXISTING MEMBER / INVITATION UI STATE
-  // These will be connected to real APIs later.
-  // ------------------------------------------------------------
-  const [members, setMembers] = React.useState(initialMembers);
+
+  const [workspaceDetailError, setWorkspaceDetailError] = React.useState<
+    string | null
+  >(null);
+
+  /* ============================================================
+     REAL MEMBERS
+  ============================================================ */
+
+  const [members, setMembers] = React.useState<WorkspaceMemberRecord[]>([]);
+
+  const [membersLoading, setMembersLoading] = React.useState(false);
+
+  const [membersError, setMembersError] = React.useState<string | null>(null);
+
+  /* ============================================================
+     INVITATIONS
+     TEMPORARY — WILL CONNECT TO API LATER
+  ============================================================ */
+
   const [invitations, setInvitations] = React.useState(initialInvitations);
+
+  /* ============================================================
+     MEMBER DIALOG STATE
+  ============================================================ */
+
   const [selectedMember, setSelectedMember] =
     React.useState<WorkspaceMember | null>(null);
+
   const [roleDialogOpen, setRoleDialogOpen] = React.useState(false);
+
   const [removeDialogOpen, setRemoveDialogOpen] = React.useState(false);
+
   const [inviteDialogOpen, setInviteDialogOpen] = React.useState(false);
+
+  const [createWorkspaceDialogOpen, setCreateWorkspaceDialogOpen] =
+    React.useState(false);
+
   const [pendingRole, setPendingRole] = React.useState<MemberRole>("MEMBER");
+
   const [activeTab, setActiveTab] = React.useState<
     "overview" | "members" | "settings"
   >("overview");
-  // ------------------------------------------------------------
-  // LOAD REAL WORKSPACES
-  // ------------------------------------------------------------
-React.useEffect(() => {
-  if (!isReady || !accessToken) {
-    return;
-  }
 
-  const token = accessToken;
-  let cancelled = false;
+  /* ============================================================
+     LOAD ACTIVE WORKSPACE DETAIL
+  ============================================================ */
 
-  async function loadWorkspace() {
-    setWorkspaceLoading(true);
-    setWorkspaceError(null);
+  React.useEffect(() => {
+    if (!isReady || !accessToken || !activeWorkspace?.slug) {
+      return;
+    }
 
-    try {
-      // 1. Get user's workspaces
-      const workspacesResponse = await getWorkspaces(token);
+    const token = accessToken;
+    const slug = activeWorkspace.slug;
 
-      if (cancelled) return;
+    let cancelled = false;
 
-      setWorkspaces(workspacesResponse.data);
+    async function loadWorkspaceDetail() {
+      try {
+        const response = await getWorkspaceBySlug(token, slug);
 
-      // No workspace
-      if (workspacesResponse.data.length === 0) {
-        return;
-      }
+        if (cancelled) return;
 
-      // 2. Get the first workspace's full details
-      const workspace = workspacesResponse.data[0];
+        setWorkspaceDetail(response.data);
+        setWorkspaceDetailError(null);
+      } catch (error) {
+        if (cancelled) return;
 
-      const detailResponse = await getWorkspaceBySlug(
-        token,
-        workspace.slug,
-      );
-
-      if (!cancelled) {
-        setWorkspaceDetail(detailResponse.data);
-      }
-    } catch (error) {
-      if (!cancelled) {
-        setWorkspaceError(
+        setWorkspaceDetailError(
           error instanceof Error
             ? error.message
-            : "Failed to load workspace.",
+            : "Failed to load workspace details.",
         );
       }
-    } finally {
-      if (!cancelled) {
-        setWorkspaceLoading(false);
+    }
+
+    void loadWorkspaceDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, activeWorkspace?.slug, isReady]);
+
+  /* ============================================================
+     LOAD REAL WORKSPACE MEMBERS
+  ============================================================ */
+
+  React.useEffect(() => {
+    if (!isReady || !accessToken || !activeWorkspace?.id) {
+      return;
+    }
+
+    const token = accessToken;
+    const workspaceId = activeWorkspace.id;
+
+    let cancelled = false;
+
+    async function loadMembers() {
+      setMembersLoading(true);
+      setMembersError(null);
+
+      try {
+        const response = await getWorkspaceMembers(token, workspaceId);
+
+        if (cancelled) return;
+
+        setMembers(response.data);
+      } catch (error) {
+        if (cancelled) return;
+
+        setMembersError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load workspace members.",
+        );
+
+        setMembers([]);
+      } finally {
+        if (!cancelled) {
+          setMembersLoading(false);
+        }
       }
     }
-  }
 
-  void loadWorkspace();
+    void loadMembers();
 
-  return () => {
-    cancelled = true;
-  };
-}, [accessToken, isReady]);
-  // ------------------------------------------------------------
-  // MEMBER ROLE
-  // ------------------------------------------------------------
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, activeWorkspace?.id, isReady]);
+
+  /* ============================================================
+     ROLE DIALOG
+  ============================================================ */
 
   const openRoleDialog = (member: WorkspaceMember) => {
     setSelectedMember(member);
@@ -141,45 +212,41 @@ React.useEffect(() => {
     setRoleDialogOpen(true);
   };
 
+  /*
+   * REAL ROLE UPDATE WILL BE CONNECTED NEXT.
+   *
+   * For now we only close the dialog.
+   */
+
   const confirmRoleChange = () => {
     if (!selectedMember) return;
-
-    setMembers((current) =>
-      current.map((member) =>
-        member.id === selectedMember.id
-          ? {
-              ...member,
-              role: pendingRole,
-            }
-          : member,
-      ),
-    );
 
     setRoleDialogOpen(false);
   };
 
-  // ------------------------------------------------------------
-  // REMOVE MEMBER
-  // ------------------------------------------------------------
+  /* ============================================================
+     REMOVE MEMBER
+  ============================================================ */
 
   const openRemoveDialog = (member: WorkspaceMember) => {
     setSelectedMember(member);
     setRemoveDialogOpen(true);
   };
 
+  /*
+   * REAL DELETE API WILL BE CONNECTED NEXT.
+   */
+
   const handleRemoveMember = () => {
     if (!selectedMember) return;
-
-    setMembers((current) =>
-      current.filter((member) => member.id !== selectedMember.id),
-    );
 
     setRemoveDialogOpen(false);
   };
 
-  // ------------------------------------------------------------
-  // INVITATION
-  // ------------------------------------------------------------
+  /* ============================================================
+     INVITATION
+     TEMPORARY
+  ============================================================ */
 
   const handleInviteSent = (email: string, role: MemberRole) => {
     setInvitations((current) => [
@@ -195,9 +262,9 @@ React.useEffect(() => {
     ]);
   };
 
-  // ------------------------------------------------------------
-  // AUTH / LOADING
-  // ------------------------------------------------------------
+  /* ============================================================
+     AUTH / INITIAL LOADING
+  ============================================================ */
 
   if (!isReady || workspaceLoading) {
     return (
@@ -207,9 +274,11 @@ React.useEffect(() => {
     );
   }
 
-  // ------------------------------------------------------------
-  // ERROR
-  // ------------------------------------------------------------
+  /* ============================================================
+     WORKSPACE ERROR
+  ============================================================ */
+
+  const workspaceError = workspaceListError || workspaceDetailError;
 
   if (workspaceError) {
     return (
@@ -231,28 +300,49 @@ React.useEffect(() => {
     );
   }
 
-  // ------------------------------------------------------------
-  // NO WORKSPACE
-  // ------------------------------------------------------------
+  /* ============================================================
+     NO WORKSPACE
+  ============================================================ */
 
-  if (workspaces.length === 0) {
+  if (workspaces.length === 0 || !activeWorkspace) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <p className="font-semibold">No workspace found</p>
+      <>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <Card className="w-full max-w-md">
+            <CardContent className="p-6 text-center">
+              <p className="font-semibold">No workspace found</p>
 
-            <p className="mt-2 text-sm text-muted-foreground">
-              You do not have any workspace yet. Create one to get started.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                You do not have any workspace yet. Create one to get started.
+              </p>
+
+              <Button
+                className="mt-4"
+                onClick={() => setCreateWorkspaceDialogOpen(true)}
+              >
+                Create workspace
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <CreateWorkspaceDialog
+          open={createWorkspaceDialogOpen}
+          onOpenChange={setCreateWorkspaceDialogOpen}
+        />
+      </>
     );
   }
 
-  // CURRENT WORKSPACE
-  const currentWorkspace = workspaceDetail ?? workspaces[0];
+  /* ============================================================
+     CURRENT WORKSPACE
+  ============================================================ */
+
+  const currentWorkspace = workspaceDetail ?? activeWorkspace;
+
+  /* ============================================================
+     OVERVIEW DATA
+  ============================================================ */
 
   const overviewData: WorkspaceOverview = {
     name: currentWorkspace.name,
@@ -272,9 +362,16 @@ React.useEffect(() => {
     projectCount: 0,
   };
 
+  /* ============================================================
+     PAGE
+  ============================================================ */
+
   return (
     <div className="flex flex-col gap-6">
-      {/* 1st section */}
+      {/* ======================================================
+          HEADER
+      ====================================================== */}
+
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
@@ -290,10 +387,24 @@ React.useEffect(() => {
           </p>
         </div>
 
-        <Button onClick={() => setInviteDialogOpen(true)}>Invite member</Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setCreateWorkspaceDialogOpen(true)}
+          >
+            Create workspace
+          </Button>
+
+          <Button onClick={() => setInviteDialogOpen(true)}>
+            Invite member
+          </Button>
+        </div>
       </div>
 
-      {/* 2nd section */}
+      {/* ======================================================
+          TABS
+      ====================================================== */}
+
       <div className="flex flex-wrap gap-2">
         {[
           {
@@ -326,10 +437,16 @@ React.useEffect(() => {
         ))}
       </div>
 
-      {/* 3rd section */}
+      {/* ======================================================
+          WORKSPACE HEADER
+      ====================================================== */}
+
       <WorkspaceHeader workspace={overviewData} />
 
-      {/* OVERVIEW */}
+      {/* ======================================================
+          OVERVIEW
+      ====================================================== */}
+
       {activeTab === "overview" ? (
         <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
           <div className="space-y-6">
@@ -400,7 +517,10 @@ React.useEffect(() => {
         </div>
       ) : null}
 
-      {/* MEMBERS */}
+      {/* ======================================================
+          MEMBERS
+      ====================================================== */}
+
       {activeTab === "members" ? (
         <div className="space-y-6">
           <Card>
@@ -423,29 +543,69 @@ React.useEffect(() => {
             </CardHeader>
           </Card>
 
-          <MemberTable
-            members={members}
-            onOpenRoleDialog={openRoleDialog}
-            onOpenRemoveDialog={openRemoveDialog}
-          />
+          {/* MEMBER LOADING */}
+
+          {membersLoading ? (
+            <Card>
+              <CardContent className="flex min-h-[180px] items-center justify-center">
+                <p className="text-sm text-muted-foreground">
+                  Loading members...
+                </p>
+              </CardContent>
+            </Card>
+          ) : membersError ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p className="font-medium">Unable to load members</p>
+
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {membersError}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <MemberTable
+              members={members}
+              onOpenRoleDialog={openRoleDialog}
+              onOpenRemoveDialog={openRemoveDialog}
+            />
+          )}
 
           <PendingInvitations invitations={invitations} />
         </div>
       ) : null}
 
-      {/* SETTINGS */}
+      {/* ======================================================
+          SETTINGS
+      ====================================================== */}
+
       {activeTab === "settings" ? (
         <WorkspaceSettings workspace={overviewData} />
       ) : null}
 
-      {/* INVITE */}
+      {/* ======================================================
+          INVITE
+      ====================================================== */}
+
       <InviteMemberDialog
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
         onInviteSent={handleInviteSent}
       />
 
-      {/* MOBILE CONTROLS */}
+      {/* ======================================================
+          CREATE WORKSPACE
+      ====================================================== */}
+
+      <CreateWorkspaceDialog
+        open={createWorkspaceDialogOpen}
+        onOpenChange={setCreateWorkspaceDialogOpen}
+      />
+
+      {/* ======================================================
+          MOBILE
+      ====================================================== */}
+
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 p-3 backdrop-blur md:hidden">
         <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm">
           <span className="font-medium">Workspace controls</span>
@@ -456,7 +616,10 @@ React.useEffect(() => {
         </div>
       </div>
 
-      {/* ROLE DIALOG */}
+      {/* ======================================================
+          ROLE DIALOG
+      ====================================================== */}
+
       {roleDialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-3 backdrop-blur-sm">
           <Card className="w-full max-w-lg border-border/70 shadow-2xl">
@@ -490,7 +653,10 @@ React.useEffect(() => {
         </div>
       ) : null}
 
-      {/* REMOVE MEMBER */}
+      {/* ======================================================
+          REMOVE MEMBER
+      ====================================================== */}
+
       <RemoveMemberDialog
         member={selectedMember}
         open={removeDialogOpen}
