@@ -56,7 +56,7 @@ export function WorkspaceSettings({
 
       setLeaveDialogOpen(false);
 
-      onWorkspaceLeft();
+      await onWorkspaceLeft();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to leave workspace.";
