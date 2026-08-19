@@ -22,7 +22,7 @@ import {
   workspaceActivity,
   workspaceStats,
 } from "@/lib/workspace-data";
-
+import { toast } from "sonner";
 import type { MemberRole } from "@/lib/workspace-data";
 
 import { useAuth } from "@/context/auth-context";
@@ -335,12 +335,20 @@ export function WorkspacePage() {
   ============================================================ */
 
   const handleMemberRemoved = (memberId: string) => {
+    const removedMember = members.find((member) => member.id === memberId);
+
     setMembers((currentMembers) =>
       currentMembers.filter((member) => member.id !== memberId),
     );
 
     setSelectedMember(null);
     setRemoveDialogOpen(false);
+
+    toast.success("Member removed successfully", {
+      description: removedMember
+        ? `${removedMember.user.name} has been removed from this workspace.`
+        : "The member has been removed from this workspace.",
+    });
   };
 
   /* ============================================================
