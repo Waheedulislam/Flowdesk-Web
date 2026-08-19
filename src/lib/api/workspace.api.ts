@@ -16,6 +16,23 @@ export type WorkspaceRecord = {
   updatedAt: string;
 };
 
+export type CreateInvitationPayload = {
+  email: string;
+  role: WorkspaceMemberRole;
+};
+
+export type InvitationRecord = {
+  id: string;
+  workspaceId: string;
+  invitedBy: string;
+  email: string;
+  role: WorkspaceMemberRole;
+  token: string;
+  status: "PENDING" | "ACCEPTED" | "EXPIRED";
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
 /** Workspace shape returned by `GET /api/v1/workspaces`. */
 export type Workspace = WorkspaceRecord & {
   role: WorkspaceMemberRole;
@@ -97,6 +114,22 @@ export function createWorkspace(
 export type UpdateMemberRolePayload = {
   role: WorkspaceMemberRole;
 };
+
+export function createInvitation(
+  accessToken: string,
+  workspaceId: string,
+  payload: CreateInvitationPayload,
+) {
+  return apiClient<InvitationRecord>(
+    `/api/v1/invitations/workspace/${workspaceId}`,
+    {
+      method: "POST",
+      accessToken,
+      body: payload,
+      expectedStatuses: 201,
+    },
+  );
+}
 
 export function updateMemberRole(
   accessToken: string,

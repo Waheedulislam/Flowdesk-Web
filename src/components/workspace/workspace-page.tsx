@@ -695,6 +695,7 @@ export function WorkspacePage() {
 
       <InviteMemberDialog
         open={inviteDialogOpen}
+        workspaceId={activeWorkspace.id}
         onOpenChange={setInviteDialogOpen}
         onInviteSent={handleInviteSent}
       />

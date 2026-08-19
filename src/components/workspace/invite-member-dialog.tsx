@@ -9,15 +9,19 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { RoleSelector } from "@/components/workspace/role-selector";
 import type { MemberRole } from "@/lib/workspace-data";
+import { toast } from "sonner";
+import { useAuth } from "@/context/auth-context";
+import { createInvitation } from "@/lib/api/workspace.api";
 
 interface InviteMemberDialogProps {
   open: boolean;
+  workspaceId: string;
   onOpenChange: (open: boolean) => void;
   onInviteSent: (email: string, role: MemberRole) => void;
 }
-
 export function InviteMemberDialog({
   open,
+  workspaceId,
   onOpenChange,
   onInviteSent,
 }: InviteMemberDialogProps) {
@@ -28,12 +32,22 @@ export function InviteMemberDialog({
     "idle",
   );
   const [message, setMessage] = React.useState("");
+  const { accessToken } = useAuth();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!email.trim()) {
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
       setStatus("error");
       setMessage("Please enter an email address.");
+      return;
+    }
+
+    if (!accessToken || !workspaceId) {
+      setStatus("error");
+      setMessage("Unable to send invitation. Please try again.");
       return;
     }
 
@@ -41,17 +55,37 @@ export function InviteMemberDialog({
     setStatus("idle");
     setMessage("");
 
-    // TODO: Connect invitation API.
-    await new Promise((resolve) => window.setTimeout(resolve, 700));
-    setLoading(false);
-    setStatus("success");
-    setMessage(`Invitation sent to ${email}.`);
-    onInviteSent(email, role);
-    onOpenChange(false);
-    setEmail("");
-    setRole("MEMBER");
-  };
+    try {
+      await createInvitation(accessToken, workspaceId, {
+        email: normalizedEmail,
+        role,
+      });
 
+      onInviteSent(normalizedEmail, role);
+
+      toast.success("Invitation sent successfully", {
+        description: `An invitation has been sent to ${normalizedEmail}.`,
+      });
+
+      setEmail("");
+      setRole("MEMBER");
+      setStatus("idle");
+      setMessage("");
+      onOpenChange(false);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to send invitation.";
+
+      setStatus("error");
+      setMessage(errorMessage);
+
+      toast.error("Failed to send invitation", {
+        description: errorMessage,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   if (!open) return null;
 
   return (
