@@ -33,6 +33,19 @@ export type InvitationRecord = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type WorkspaceInvitation = {
+  id: string;
+  workspaceId: string;
+  invitedBy: string;
+  email: string;
+  role: WorkspaceMemberRole;
+  status: "PENDING" | "ACCEPTED" | "EXPIRED";
+  token: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
 /** Workspace shape returned by `GET /api/v1/workspaces`. */
 export type Workspace = WorkspaceRecord & {
   role: WorkspaceMemberRole;
@@ -127,6 +140,20 @@ export function createInvitation(
       accessToken,
       body: payload,
       expectedStatuses: 201,
+    },
+  );
+}
+
+export function getWorkspaceInvitations(
+  accessToken: string,
+  workspaceId: string,
+) {
+  return apiClient<WorkspaceInvitation[]>(
+    `/api/v1/invitations/workspace/${workspaceId}`,
+    {
+      method: "GET",
+      accessToken,
+      expectedStatuses: 200,
     },
   );
 }

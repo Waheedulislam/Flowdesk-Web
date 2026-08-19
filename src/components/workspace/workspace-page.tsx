@@ -17,7 +17,6 @@ import { WorkspaceStats } from "@/components/workspace/workspace-stats";
 import { CreateWorkspaceDialog } from "@/components/workspace/create-workspace-dialog";
 
 import {
-  initialInvitations,
   roleDescriptions,
   workspaceActivity,
   workspaceStats,
@@ -31,10 +30,12 @@ import { useWorkspace } from "@/context/workspace-context";
 import {
   getWorkspaceBySlug,
   getWorkspaceMembers,
+  getWorkspaceInvitations,
   updateMemberRole,
   type WorkspaceDetail,
   type WorkspaceMemberRecord,
   type WorkspaceMemberRole,
+  type WorkspaceInvitation,
 } from "@/lib/api/workspace.api";
 
 export interface WorkspaceOverview {
@@ -91,7 +92,15 @@ export function WorkspacePage() {
      INVITATIONS
   ============================================================ */
 
-  const [invitations, setInvitations] = React.useState(initialInvitations);
+  const [invitations, setInvitations] = React.useState<WorkspaceInvitation[]>(
+    [],
+  );
+
+  const [invitationsLoading, setInvitationsLoading] = React.useState(false);
+
+  const [invitationsError, setInvitationsError] = React.useState<string | null>(
+    null,
+  );
 
   /* ============================================================
      DIALOG STATE
@@ -212,6 +221,50 @@ export function WorkspacePage() {
     }
 
     void loadMembers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, activeWorkspace?.id, isReady]);
+
+  React.useEffect(() => {
+    if (!isReady || !accessToken || !activeWorkspace?.id) {
+      return;
+    }
+
+    const token = accessToken;
+    const workspaceId = activeWorkspace.id;
+
+    let cancelled = false;
+
+    async function loadInvitations() {
+      setInvitationsLoading(true);
+      setInvitationsError(null);
+
+      try {
+        const response = await getWorkspaceInvitations(token, workspaceId);
+
+        if (cancelled) return;
+
+        setInvitations(response.data);
+      } catch (error) {
+        if (cancelled) return;
+
+        setInvitationsError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load workspace invitations.",
+        );
+
+        setInvitations([]);
+      } finally {
+        if (!cancelled) {
+          setInvitationsLoading(false);
+        }
+      }
+    }
+
+    void loadInvitations();
 
     return () => {
       cancelled = true;
@@ -355,18 +408,24 @@ export function WorkspacePage() {
      INVITATION
   ============================================================ */
 
-  const handleInviteSent = (email: string, role: MemberRole) => {
-    setInvitations((current) => [
-      {
-        id: `i-${current.length + 1}`,
-        email,
-        role,
-        status: "Pending",
-        sentAt: "Just now",
-        expiresAt: "In 7 days",
-      },
-      ...current,
-    ]);
+  const handleInviteSent = () => {
+    if (!accessToken || !activeWorkspace?.id) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        const response = await getWorkspaceInvitations(
+          accessToken,
+          activeWorkspace.id,
+        );
+
+        setInvitations(response.data);
+      } catch {
+        // Invitation was already sent successfully.
+        // The next page refresh will load the correct data.
+      }
+    })();
   };
 
   /* ============================================================
@@ -559,7 +618,11 @@ export function WorkspacePage() {
           <div className="space-y-6">
             <WorkspaceActivityPanel activity={workspaceActivity} />
 
-            <PendingInvitations invitations={invitations} />
+            <PendingInvitations
+              invitations={invitations}
+              loading={invitationsLoading}
+              error={invitationsError}
+            />
           </div>
 
           <div className="space-y-6">
@@ -649,7 +712,6 @@ export function WorkspacePage() {
               </Button>
             </CardHeader>
           </Card>
-
           {membersLoading ? (
             <Card>
               <CardContent className="flex min-h-[180px] items-center justify-center">
@@ -676,8 +738,11 @@ export function WorkspacePage() {
               onOpenRemoveDialog={openRemoveDialog}
             />
           )}
-
-          <PendingInvitations invitations={invitations} />
+          <PendingInvitations
+            invitations={invitations}
+            loading={invitationsLoading}
+            error={invitationsError}
+          />
         </div>
       ) : null}
 
