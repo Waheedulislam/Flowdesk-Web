@@ -66,6 +66,7 @@ export function WorkspacePage() {
     activeWorkspace,
     isLoading: workspaceLoading,
     error: workspaceListError,
+    refreshWorkspaces,
   } = useWorkspace();
 
   /* ============================================================
@@ -780,7 +781,22 @@ export function WorkspacePage() {
       ====================================================== */}
 
       {activeTab === "settings" ? (
-        <WorkspaceSettings workspace={overviewData} />
+        <WorkspaceSettings
+          workspace={overviewData}
+          workspaceId={activeWorkspace.id}
+          userRole={currentWorkspace.role}
+          onWorkspaceLeft={async () => {
+            try {
+              const nextWorkspaces = await refreshWorkspaces();
+
+              if (nextWorkspaces.length === 0) {
+                window.location.href = "/dashboard";
+              }
+            } catch {
+              window.location.href = "/dashboard";
+            }
+          }}
+        />
       ) : null}
 
       {/* ======================================================
