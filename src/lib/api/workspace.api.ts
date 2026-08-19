@@ -158,6 +158,16 @@ export function getWorkspaceInvitations(
   );
 }
 
+export function acceptInvitation(accessToken: string, token: string) {
+  return apiClient<WorkspaceInvitation>(
+    `/api/v1/invitations/workspace/${encodeURIComponent(token)}/accept`,
+    {
+      method: "POST",
+      accessToken,
+      expectedStatuses: 200,
+    },
+  );
+}
 export function updateMemberRole(
   accessToken: string,
   workspaceId: string,
