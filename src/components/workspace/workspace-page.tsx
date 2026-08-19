@@ -15,6 +15,7 @@ import { WorkspaceOverview as WorkspaceActivityPanel } from "@/components/worksp
 import { WorkspaceSettings } from "@/components/workspace/workspace-settings";
 import { WorkspaceStats } from "@/components/workspace/workspace-stats";
 import { CreateWorkspaceDialog } from "@/components/workspace/create-workspace-dialog";
+import { CancelInvitationDialog } from "@/components/workspace/cancel-invitation-dialog";
 
 import {
   roleDescriptions,
@@ -182,6 +183,15 @@ export function WorkspacePage() {
   /* ============================================================
      LOAD WORKSPACE MEMBERS
   ============================================================ */
+  const [selectedInvitation, setSelectedInvitation] =
+    React.useState<WorkspaceInvitation | null>(null);
+
+  const [cancelInvitationDialogOpen, setCancelInvitationDialogOpen] =
+    React.useState(false);
+  const openCancelInvitationDialog = (invitation: WorkspaceInvitation) => {
+    setSelectedInvitation(invitation);
+    setCancelInvitationDialogOpen(true);
+  };
 
   React.useEffect(() => {
     if (!isReady || !accessToken || !activeWorkspace?.id) {
@@ -531,7 +541,24 @@ export function WorkspacePage() {
   /* ============================================================
      PAGE
   ============================================================ */
+  const handleInvitationCancelled = (invitationId: string) => {
+    const cancelledInvitation = invitations.find(
+      (invitation) => invitation.id === invitationId,
+    );
 
+    setInvitations((current) =>
+      current.filter((invitation) => invitation.id !== invitationId),
+    );
+
+    setSelectedInvitation(null);
+    setCancelInvitationDialogOpen(false);
+
+    toast.success("Invitation cancelled", {
+      description: cancelledInvitation
+        ? `Invitation to ${cancelledInvitation.email} has been cancelled.`
+        : "The invitation has been cancelled.",
+    });
+  };
   return (
     <div className="flex flex-col gap-6">
       {/* ======================================================
@@ -622,6 +649,7 @@ export function WorkspacePage() {
               invitations={invitations}
               loading={invitationsLoading}
               error={invitationsError}
+              onCancel={openCancelInvitationDialog}
             />
           </div>
 
@@ -742,6 +770,7 @@ export function WorkspacePage() {
             invitations={invitations}
             loading={invitationsLoading}
             error={invitationsError}
+            onCancel={openCancelInvitationDialog}
           />
         </div>
       ) : null}
@@ -860,6 +889,13 @@ export function WorkspacePage() {
         open={removeDialogOpen}
         onOpenChange={setRemoveDialogOpen}
         onSuccess={handleMemberRemoved}
+      />
+      <CancelInvitationDialog
+        invitation={selectedInvitation}
+        workspaceId={activeWorkspace.id}
+        open={cancelInvitationDialogOpen}
+        onOpenChange={setCancelInvitationDialogOpen}
+        onSuccess={handleInvitationCancelled}
       />
     </div>
   );

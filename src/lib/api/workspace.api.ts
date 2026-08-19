@@ -40,7 +40,7 @@ export type WorkspaceInvitation = {
   invitedBy: string;
   email: string;
   role: WorkspaceMemberRole;
-  status: "PENDING" | "ACCEPTED" | "EXPIRED";
+  status: "PENDING" | "ACCEPTED" | "EXPIRED" | "CANCELLED";
   token: string;
   expiresAt: string;
   createdAt: string;
@@ -163,6 +163,21 @@ export function acceptInvitation(accessToken: string, token: string) {
     `/api/v1/invitations/workspace/${encodeURIComponent(token)}/accept`,
     {
       method: "POST",
+      accessToken,
+      expectedStatuses: 200,
+    },
+  );
+}
+
+export function cancelInvitation(
+  accessToken: string,
+  workspaceId: string,
+  invitationId: string,
+) {
+  return apiClient<WorkspaceInvitation>(
+    `/api/v1/invitations/workspace/${workspaceId}/${invitationId}`,
+    {
+      method: "DELETE",
       accessToken,
       expectedStatuses: 200,
     },

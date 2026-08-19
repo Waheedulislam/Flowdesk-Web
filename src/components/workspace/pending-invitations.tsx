@@ -10,6 +10,7 @@ interface PendingInvitationsProps {
   invitations: WorkspaceInvitation[];
   loading?: boolean;
   error?: string | null;
+  onCancel: (invitation: WorkspaceInvitation) => void;
 }
 
 function formatDate(date: string) {
@@ -28,6 +29,9 @@ function getStatusVariant(status: WorkspaceInvitation["status"]) {
     case "ACCEPTED":
       return "success";
 
+    case "CANCELLED":
+      return "secondary";
+
     default:
       return "secondary";
   }
@@ -44,6 +48,9 @@ function getStatusLabel(status: WorkspaceInvitation["status"]) {
     case "EXPIRED":
       return "Expired";
 
+    case "CANCELLED":
+      return "Cancelled";
+
     default:
       return status;
   }
@@ -53,6 +60,7 @@ export function PendingInvitations({
   invitations,
   loading = false,
   error = null,
+  onCancel,
 }: PendingInvitationsProps) {
   return (
     <Card>
@@ -89,17 +97,17 @@ export function PendingInvitations({
         {!loading && !error && invitations.length === 0 ? (
           <div className="flex min-h-[120px] items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/20">
             <div className="text-center">
-              <p className="text-sm font-medium">No invitations</p>
+              <p className="text-sm font-medium">No pending invitations</p>
 
               <p className="mt-1 text-xs text-muted-foreground">
-                There are no pending invitations for this workspace.
+                Invitations you send will appear here.
               </p>
             </div>
           </div>
         ) : null}
 
         {/* Invitations */}
-        {!loading && !error
+        {!loading && !error && invitations.length > 0
           ? invitations.map((invitation) => (
               <div
                 key={invitation.id}
@@ -129,7 +137,11 @@ export function PendingInvitations({
                   </Badge>
 
                   {invitation.status === "PENDING" ? (
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCancel(invitation)}
+                    >
                       Cancel
                     </Button>
                   ) : null}
