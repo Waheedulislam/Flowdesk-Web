@@ -194,10 +194,10 @@ export function MemberTable({
                       <div className="flex items-center gap-3">
                         <Avatar name={member.user.name} className="size-9" />
 
-                        <div>
-                          <p className="font-medium">{member.user.name}</p>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{member.user.name}</p>
 
-                          <p className="text-xs text-muted-foreground">
+                          <p className="max-w-56 truncate text-xs text-muted-foreground">
                             {member.user.email}
                           </p>
                         </div>
@@ -290,10 +290,10 @@ export function MemberTable({
                   <div className="flex items-center gap-3">
                     <Avatar name={member.user.name} className="size-9" />
 
-                    <div>
-                      <p className="font-medium">{member.user.name}</p>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{member.user.name}</p>
 
-                      <p className="text-xs text-muted-foreground">
+                      <p className="max-w-48 truncate text-xs text-muted-foreground">
                         {member.user.email}
                       </p>
                     </div>

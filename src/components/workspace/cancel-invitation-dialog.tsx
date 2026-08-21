@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import type { WorkspaceInvitation } from "@/lib/api/workspace.api";
+import { cancelInvitation } from "@/lib/api/workspace.api";
+import { useAuth } from "@/context/auth-context";
 
 interface CancelInvitationDialogProps {
   invitation: WorkspaceInvitation | null;
@@ -23,6 +25,7 @@ export function CancelInvitationDialog({
   onOpenChange,
   onSuccess,
 }: CancelInvitationDialogProps) {
+  const { accessToken } = useAuth();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -31,7 +34,7 @@ export function CancelInvitationDialog({
   }
 
   const handleCancel = async () => {
-    if (!workspaceId || !invitation.id) {
+    if (!accessToken || !workspaceId || !invitation.id) {
       return;
     }
 
@@ -43,6 +46,7 @@ export function CancelInvitationDialog({
       // এখানে cancelInvitation API function call হবে।
 
       // আপাতত dialog close করার জন্য:
+      await cancelInvitation(accessToken, workspaceId, invitation.id);
       onSuccess(invitation.id);
     } catch (error) {
       setError(

@@ -193,22 +193,6 @@ export function WorkspaceSettings({
               </div>
             )}
 
-            {/* ARCHIVE */}
-
-            {userRole === "OWNER" ? (
-              <div className="flex flex-col gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="font-medium">Archive workspace</p>
-
-                  <p className="text-sm text-muted-foreground">
-                    This action pauses access and archives the workspace for the
-                    team.
-                  </p>
-                </div>
-
-                <Button variant="destructive">Archive</Button>
-              </div>
-            ) : null}
           </CardContent>
         </Card>
       </div>
