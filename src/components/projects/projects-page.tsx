@@ -7,7 +7,10 @@ import { CreateProjectDialog } from "@/components/projects/create-project-dialog
 import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ProjectDetails } from "@/components/projects/project-details";
-import { ProjectFilters } from "@/components/projects/project-filters";
+import {
+  ProjectFilters,
+  type ProjectOwnerOption,
+} from "@/components/projects/project-filters";
 import { ProjectSettings } from "@/components/projects/project-settings";
 import { ProjectTable } from "@/components/projects/project-table";
 import { useProjectActions } from "@/components/projects/hooks/use-project-actions";
@@ -28,6 +31,7 @@ export function ProjectsPage() {
     activeWorkspace?.role === "OWNER" || activeWorkspace?.role === "ADMIN";
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState("All");
+  const [owner, setOwner] = React.useState("All");
   const [sort, setSort] = React.useState("updated");
   const [view, setView] = React.useState<"grid" | "list">("grid");
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -39,9 +43,11 @@ export function ProjectsPage() {
       setSelected(null);
       setSettings(false);
       setDeleteOpen(false);
+      setOwner("All");
     }, 0);
     return () => window.clearTimeout(id);
   }, [activeWorkspace?.id]);
+  const ownerOptions: ProjectOwnerOption[] = [];
   const actions = useProjectActions({
     accessToken,
     workspaceId: activeWorkspace?.id,
@@ -64,7 +70,8 @@ export function ProjectsPage() {
               .join(" ")
               .toLowerCase()
               .includes(search.toLowerCase()) &&
-            (status === "All" || p.status === status),
+            (status === "All" || p.status === status) &&
+            (owner === "All" || p.createdBy === owner),
         )
         .sort((a, b) =>
           sort === "name"
@@ -73,7 +80,7 @@ export function ProjectsPage() {
               ? b.createdAt.localeCompare(a.createdAt)
               : b.updatedAt.localeCompare(a.updatedAt),
         ),
-    [state.data, search, status, sort],
+    [state.data, search, status, owner, sort],
   );
   if (!isReady || workspaceLoading || state.loading)
     return <Message title="Loading projects..." />;
@@ -119,6 +126,9 @@ export function ProjectsPage() {
             onSearchChange={setSearch}
             status={status}
             onStatusChange={setStatus}
+            owner={owner}
+            onOwnerChange={setOwner}
+            owners={ownerOptions}
             sort={sort}
             onSortChange={setSort}
             view={view}
