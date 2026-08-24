@@ -104,7 +104,8 @@ export function ProjectsPage() {
             Manage your portfolio
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Projects in {activeWorkspace.name}.
+            A polished, workspace-focused area for planning, tracking, and
+            reviewing projects across the team.
           </p>
         </div>
         {canManage && (
