@@ -1,1 +1,90 @@
-import { Button } from "@/components/ui/button"; import { Card,CardContent,CardHeader,CardTitle } from "@/components/ui/card"; import { ProjectStatusBadge } from "@/components/projects/project-status-badge"; import type { ProjectRecord } from "@/lib/api/project.api"; export function ProjectDetails({project,canManage,onEdit,onBack}:{project:ProjectRecord;canManage:boolean;onEdit:()=>void;onBack:()=>void}){return <div className="space-y-6"><div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><div><Button variant="outline" onClick={onBack} className="mb-3">Back to projects</Button><div className="flex flex-wrap items-center gap-3"><h2 className="text-2xl font-semibold tracking-tight">{project.name}</h2><ProjectStatusBadge status={project.status}/></div>{project.description&&<p className="mt-2 max-w-2xl text-sm text-muted-foreground">{project.description}</p>}</div>{canManage&&<Button variant="outline" onClick={onEdit}>Edit</Button>}</div><Card><CardHeader><CardTitle>Project overview</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2"><Info label="Created" value={new Date(project.createdAt).toLocaleString()}/><Info label="Last updated" value={new Date(project.updatedAt).toLocaleString()}/></CardContent></Card><Card><CardHeader><CardTitle>Tasks, members, and activity</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">This project endpoint does not return task, member, or activity summaries yet.</p></CardContent></Card></div>} function Info({label,value}:{label:string;value:string}){return <div className="rounded-lg border border-border bg-background/70 p-3"><p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p><p className="mt-1 font-semibold">{value}</p></div>}
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProjectMembersSection } from "@/components/projects/project-members-section";
+import { ProjectStatusBadge } from "@/components/projects/project-status-badge";
+import type { ProjectRecord } from "@/lib/api/project.api";
+import type { WorkspaceMemberRole } from "@/lib/api/workspace.api";
+
+export function ProjectDetails({
+  project,
+  canManage,
+  workspaceRole,
+  onEdit,
+  onBack,
+}: {
+  project: ProjectRecord;
+  canManage: boolean;
+  workspaceRole: WorkspaceMemberRole;
+  onEdit: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <Button variant="outline" onClick={onBack} className="mb-3">
+            Back to projects
+          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {project.name}
+            </h2>
+            <ProjectStatusBadge status={project.status} />
+          </div>
+          {project.description && (
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              {project.description}
+            </p>
+          )}
+        </div>
+        {canManage && (
+          <Button variant="outline" onClick={onEdit}>
+            Edit
+          </Button>
+        )}
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Project overview</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2">
+          <Info
+            label="Created"
+            value={new Date(project.createdAt).toLocaleString()}
+          />
+          <Info
+            label="Last updated"
+            value={new Date(project.updatedAt).toLocaleString()}
+          />
+        </CardContent>
+      </Card>
+      <ProjectMembersSection
+        projectId={project.id}
+        workspaceId={project.workspaceId}
+        workspaceRole={workspaceRole}
+      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Tasks, members, and activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            This project endpoint does not return task or activity summaries
+            yet.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-background/70 p-3">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 font-semibold">{value}</p>
+    </div>
+  );
+}

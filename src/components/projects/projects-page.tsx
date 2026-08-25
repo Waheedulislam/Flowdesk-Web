@@ -195,6 +195,7 @@ export function ProjectsPage() {
             <ProjectDetails
               project={selected}
               canManage={canManage}
+              workspaceRole={activeWorkspace.role}
               onEdit={() => setSettings(true)}
               onBack={() => setSelected(null)}
             />
