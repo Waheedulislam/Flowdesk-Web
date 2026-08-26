@@ -8,35 +8,31 @@ import { Input } from "@/components/ui/input";
 import type { TaskPriority, TaskStatus } from "@/lib/dashboard-data";
 import type { TaskItem } from "@/lib/tasks-data";
 
+type Option = { id: string; name: string; email?: string };
+
 interface TaskEditorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: TaskItem | null;
+  projects: Option[];
+  assignees: Option[];
   onSave: (payload: {
     title: string;
     description: string;
-    project: string;
-    assignee: string;
+    projectId: string;
+    assignedTo: string;
     status: TaskStatus;
     priority: TaskPriority;
     dueDate: string;
-  }) => void;
+  }) => Promise<void>;
 }
-
-const defaultValues = {
-  title: "",
-  description: "",
-  project: "Apollo Web Redesign",
-  assignee: "Nina Patel",
-  status: "TODO" as TaskStatus,
-  priority: "MEDIUM" as TaskPriority,
-  dueDate: "Aug 24, 2026",
-};
 
 export function TaskEditorDialog({
   open,
   onOpenChange,
   task,
+  projects,
+  assignees,
   onSave,
 }: TaskEditorDialogProps) {
   if (!open) return null;
@@ -45,6 +41,8 @@ export function TaskEditorDialog({
     <TaskEditorDialogContent
       key={task?.id ?? "new"}
       task={task}
+      projects={projects}
+      assignees={assignees}
       onOpenChange={onOpenChange}
       onSave={onSave}
     />
@@ -53,21 +51,32 @@ export function TaskEditorDialog({
 
 function TaskEditorDialogContent({
   task,
+  projects,
+  assignees,
   onOpenChange,
   onSave,
 }: Omit<TaskEditorDialogProps, "open">) {
+  const [saving, setSaving] = React.useState(false);
   const [form, setForm] = React.useState(() =>
     task
       ? {
           title: task.title,
           description: task.description,
-          project: task.project,
-          assignee: task.assignee,
+          projectId: task.projectId,
+          assignedTo: task.assigneeId ?? "",
           status: task.status,
           priority: task.priority,
-          dueDate: task.dueDate,
+          dueDate: task.dueDateValue?.slice(0, 10) ?? "",
         }
-      : defaultValues,
+      : {
+          title: "",
+          description: "",
+          projectId: projects[0]?.id ?? "",
+          assignedTo: assignees[0]?.id ?? "",
+          status: "TODO" as TaskStatus,
+          priority: "MEDIUM" as TaskPriority,
+          dueDate: "",
+        },
   );
 
   return (
@@ -125,43 +134,48 @@ function TaskEditorDialogContent({
             <div>
               <label className="mb-2 block text-sm font-medium">Project</label>
               <select
-                value={form.project}
+                value={form.projectId}
+                disabled={Boolean(task) || saving}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    project: event.target.value,
+                    projectId: event.target.value,
                   }))
                 }
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="Apollo Web Redesign">Apollo Web Redesign</option>
-                <option value="Atlas Mobile App">Atlas Mobile App</option>
-                <option value="Orbit Analytics">Orbit Analytics</option>
-                <option value="Nova Design System">Nova Design System</option>
+                {projects.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium">Assignee</label>
               <select
-                value={form.assignee}
+                value={form.assignedTo}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    assignee: event.target.value,
+                    assignedTo: event.target.value,
                   }))
                 }
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="Nina Patel">Nina Patel</option>
-                <option value="Jun Kim">Jun Kim</option>
-                <option value="Dylan Cruz">Dylan Cruz</option>
-                <option value="Tara Brooks">Tara Brooks</option>
+                <option value="">Unassigned</option>
+                {assignees.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium">Status</label>
               <select
                 value={form.status}
+                disabled={!task || saving}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
@@ -197,7 +211,8 @@ function TaskEditorDialogContent({
             <div>
               <label className="mb-2 block text-sm font-medium">Due date</label>
               <Input
-                value={form.dueDate}
+                type="date"
+                value={form.dueDate ? form.dueDate.slice(0, 10) : ""}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
@@ -210,16 +225,24 @@ function TaskEditorDialogContent({
           </div>
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
             <Button
+              disabled={saving}
               onClick={() => {
-                onSave(form);
-                onOpenChange(false);
+                setSaving(true);
+                void onSave(form)
+                  .then(() => onOpenChange(false))
+                  .catch(() => undefined)
+                  .finally(() => setSaving(false));
               }}
             >
-              Save task
+              {saving ? "Saving..." : "Save task"}
             </Button>
           </div>
         </div>

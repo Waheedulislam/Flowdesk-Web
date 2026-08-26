@@ -5,7 +5,6 @@ import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { TaskPriority, TaskStatus } from "@/lib/dashboard-data";
 
 interface TaskFiltersProps {
   search: string;
@@ -22,6 +21,8 @@ interface TaskFiltersProps {
   onSortChange: (value: string) => void;
   view: "list" | "kanban";
   onViewChange: (view: "list" | "kanban") => void;
+  projects: Array<{ id: string; name: string }>;
+  assignees: Array<{ id: string; name: string }>;
 }
 
 export function TaskFilters({
@@ -39,6 +40,8 @@ export function TaskFilters({
   onSortChange,
   view,
   onViewChange,
+  projects,
+  assignees,
 }: TaskFiltersProps) {
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
@@ -80,10 +83,11 @@ export function TaskFilters({
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="All">All assignees</option>
-          <option value="Nina Patel">Nina Patel</option>
-          <option value="Jun Kim">Jun Kim</option>
-          <option value="Dylan Cruz">Dylan Cruz</option>
-          <option value="Tara Brooks">Tara Brooks</option>
+          {assignees.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.name}
+            </option>
+          ))}
         </select>
         <select
           value={project}
@@ -91,10 +95,11 @@ export function TaskFilters({
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="All">All projects</option>
-          <option value="Apollo Web Redesign">Apollo Web Redesign</option>
-          <option value="Atlas Mobile App">Atlas Mobile App</option>
-          <option value="Orbit Analytics">Orbit Analytics</option>
-          <option value="Nova Design System">Nova Design System</option>
+          {projects.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.name}
+            </option>
+          ))}
         </select>
       </div>
       <div className="flex flex-wrap items-center gap-2">

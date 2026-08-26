@@ -34,8 +34,7 @@ export function AddProjectMemberDialog({
 }: AddProjectMemberDialogProps) {
   const [query, setQuery] = React.useState("");
   const [selectedUserId, setSelectedUserId] = React.useState("");
-  const [role, setRole] =
-    React.useState<Exclude<ProjectRole, "PROJECT_ADMIN">>("DEVELOPER");
+  const [role, setRole] = React.useState<ProjectRole>("DEVELOPER");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -138,14 +137,11 @@ export function AddProjectMemberDialog({
             <span>Project role</span>
             <select
               value={role}
-              onChange={(event) =>
-                setRole(
-                  event.target.value as Exclude<ProjectRole, "PROJECT_ADMIN">,
-                )
-              }
+              onChange={(event) => setRole(event.target.value as ProjectRole)}
               disabled={loading}
               className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
+              <option value="PROJECT_ADMIN">Project admin</option>
               <option value="DEVELOPER">Developer</option>
               <option value="VIEWER">Viewer</option>
             </select>

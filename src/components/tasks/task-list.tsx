@@ -53,7 +53,11 @@ export function TaskList({ tasks, onOpen }: TaskListProps) {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Avatar name={task.assignee} className="size-8" />
+                        <Avatar
+                          name={task.assignee}
+                          src={task.assigneeAvatar ?? undefined}
+                          className="size-8"
+                        />
                         <span className="truncate text-sm">
                           {task.assignee}
                         </span>

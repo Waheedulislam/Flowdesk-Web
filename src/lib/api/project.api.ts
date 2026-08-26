@@ -40,7 +40,7 @@ export type ProjectMemberRecord = {
 
 export type AddProjectMemberPayload = {
   userId: string;
-  role: Exclude<ProjectRole, "PROJECT_ADMIN">;
+  role: ProjectRole;
 };
 
 export type ProjectMemberRoleUpdate = Pick<

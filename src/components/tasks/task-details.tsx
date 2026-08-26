@@ -1,14 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  AlertTriangle,
-  Paperclip,
-  MessageSquare,
-  PencilLine,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Paperclip, PencilLine, Trash2, X } from "lucide-react";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -77,7 +70,14 @@ export function TaskDetails({
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
                     Assignee
                   </p>
-                  <p className="mt-1 font-medium">{task.assignee}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <Avatar
+                      name={task.assignee}
+                      src={task.assigneeAvatar ?? undefined}
+                      className="size-6"
+                    />
+                    <p className="font-medium">{task.assignee}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>

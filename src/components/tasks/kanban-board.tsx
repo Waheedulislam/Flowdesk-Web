@@ -216,6 +216,7 @@ export function KanbanBoard({ tasks, onOpen, onMoveTask }: KanbanBoardProps) {
                         </span>
                         <Avatar
                           name={task.assignee}
+                          src={task.assigneeAvatar ?? undefined}
                           className="size-8 border border-border/60 bg-background/90"
                         />
                       </div>
