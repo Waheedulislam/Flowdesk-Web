@@ -15,9 +15,11 @@ import { ProjectSettings } from "@/components/projects/project-settings";
 import { ProjectTable } from "@/components/projects/project-table";
 import { useProjectActions } from "@/components/projects/hooks/use-project-actions";
 import { useProjects } from "@/components/projects/hooks/use-projects";
+import { useTasks, type TaskProject } from "@/components/tasks/hooks/use-tasks";
 import { useAuth } from "@/context/auth-context";
 import { useWorkspace } from "@/context/workspace-context";
 import type { ProjectRecord } from "@/lib/api/project.api";
+import { getProjectTaskStatistics } from "@/lib/project-task-statistics";
 
 export function ProjectsPage() {
   const { accessToken, isReady } = useAuth();
@@ -27,6 +29,30 @@ export function ProjectsPage() {
     isReady,
     workspaceId: activeWorkspace?.id,
   });
+  const taskProjects = React.useMemo<TaskProject[]>(
+    () => state.data.map(({ id, name }) => ({ id, name })),
+    [state.data],
+  );
+  const taskState = useTasks({
+    accessToken,
+    isReady,
+    projects: taskProjects,
+  });
+  const taskStatistics = React.useMemo(() => {
+    const statistics = new Map<
+      string,
+      ReturnType<typeof getProjectTaskStatistics>
+    >();
+
+    taskProjects.forEach((project) => {
+      const projectTasks = taskState.tasks.filter(
+        (task) => task.projectId === project.id,
+      );
+      statistics.set(project.id, getProjectTaskStatistics(projectTasks));
+    });
+
+    return statistics;
+  }, [taskProjects, taskState.tasks]);
   const canManage =
     activeWorkspace?.role === "OWNER" || activeWorkspace?.role === "ADMIN";
   const [search, setSearch] = React.useState("");
@@ -142,7 +168,16 @@ export function ProjectsPage() {
             {view === "grid" ? (
               <div className="grid gap-4 lg:grid-cols-2">
                 {projects.map((p) => (
-                  <ProjectCard key={p.id} project={p} onOpen={setSelected} />
+                  <ProjectCard
+                    key={p.id}
+                    project={p}
+                    onOpen={setSelected}
+                    statistics={
+                      taskState.loading || taskState.error
+                        ? undefined
+                        : taskStatistics.get(p.id)
+                    }
+                  />
                 ))}
               </div>
             ) : (
@@ -194,6 +229,13 @@ export function ProjectsPage() {
           ) : (
             <ProjectDetails
               project={selected}
+              statistics={
+                taskState.loading || taskState.error
+                  ? undefined
+                  : taskStatistics.get(selected.id)
+              }
+              taskStatisticsError={taskState.error}
+              onRetryTaskStatistics={() => void taskState.reload()}
               canManage={canManage}
               workspaceRole={activeWorkspace.role}
               onEdit={() => setSettings(true)}

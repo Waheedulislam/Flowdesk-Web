@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectStatusBadge } from "@/components/projects/project-status-badge";
 import type { ProjectRecord } from "@/lib/api/project.api";
+import type { ProjectTaskStatistics } from "@/lib/project-task-statistics";
 
 const headerTints: Record<ProjectRecord["status"], string> = {
   PLANNING:
@@ -36,9 +37,11 @@ function Stat({ label, value }: { label: string; value: string }) {
 export function ProjectCard({
   project,
   onOpen,
+  statistics,
 }: {
   project: ProjectRecord;
   onOpen: (project: ProjectRecord) => void;
+  statistics?: ProjectTaskStatistics;
 }) {
   return (
     <Card
@@ -64,14 +67,22 @@ export function ProjectCard({
         <section aria-label="Project progress">
           <div className="flex items-center justify-between text-sm">
             <p className="font-medium">Progress</p>
-            <p className="font-semibold text-muted-foreground">—</p>
+            <p className="font-semibold text-muted-foreground">
+              {statistics ? `${statistics.progress}%` : "—"}
+            </p>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full w-0 rounded-full bg-primary" />
+            <div
+              className="h-full rounded-full bg-primary"
+              style={{ width: `${statistics?.progress ?? 0}%` }}
+            />
           </div>
         </section>
         <div className="grid grid-cols-2 gap-3">
-          <Stat label="Tasks" value="—" />
+          <Stat
+            label="Tasks"
+            value={statistics ? String(statistics.totalTasks) : "—"}
+          />
           <Stat label="Owner" value="—" />
         </div>
         <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-4 text-xs text-muted-foreground">

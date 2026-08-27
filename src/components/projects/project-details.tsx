@@ -3,16 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectMembersSection } from "@/components/projects/project-members-section";
 import { ProjectStatusBadge } from "@/components/projects/project-status-badge";
 import type { ProjectRecord } from "@/lib/api/project.api";
+import type { ProjectTaskStatistics } from "@/lib/project-task-statistics";
 import type { WorkspaceMemberRole } from "@/lib/api/workspace.api";
 
 export function ProjectDetails({
   project,
+  statistics,
+  taskStatisticsError,
+  onRetryTaskStatistics,
   canManage,
   workspaceRole,
   onEdit,
   onBack,
 }: {
   project: ProjectRecord;
+  statistics?: ProjectTaskStatistics;
+  taskStatisticsError?: string | null;
+  onRetryTaskStatistics?: () => void;
   canManage: boolean;
   workspaceRole: WorkspaceMemberRole;
   onEdit: () => void;
@@ -68,10 +75,46 @@ export function ProjectDetails({
           <CardTitle>Tasks, members, and activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            This project endpoint does not return task or activity summaries
-            yet.
-          </p>
+          {statistics ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Info label="Tasks" value={String(statistics.totalTasks)} />
+              <Info
+                label="Completed"
+                value={String(statistics.completedTasks)}
+              />
+              <Info label="Progress" value={`${statistics.progress}%`} />
+              <Info
+                label="To do"
+                value={String(statistics.statusCounts.TODO)}
+              />
+              <Info
+                label="In progress"
+                value={String(statistics.statusCounts.IN_PROGRESS)}
+              />
+              <Info
+                label="In review"
+                value={String(statistics.statusCounts.IN_REVIEW)}
+              />
+              <Info label="Done" value={String(statistics.statusCounts.DONE)} />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {taskStatisticsError
+                  ? "Unable to load task statistics."
+                  : "Task statistics are loading."}
+              </p>
+              {taskStatisticsError && onRetryTaskStatistics && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRetryTaskStatistics}
+                >
+                  Try again
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
