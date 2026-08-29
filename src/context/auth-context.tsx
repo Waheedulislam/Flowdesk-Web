@@ -14,6 +14,7 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   isReady: boolean;
   completeSignIn: (accessToken: string) => Promise<void>;
+  updateUser: (user: CurrentUser) => void;
   signOut: () => void;
 };
 
@@ -101,20 +102,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [accessToken, clearAuthentication]);
 
-  const completeSignIn = React.useCallback(async (token: string) => {
-    setIsReady(false);
-    try {
-      await loadCurrentUser(token);
-      window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
-      notifyAuthChange();
-    } catch (error) {
-      clearAuthentication();
-      if (error instanceof ApiClientError) throw new Error(error.message);
-      throw error;
-    } finally {
-      setIsReady(true);
-    }
-  }, [clearAuthentication, loadCurrentUser]);
+  const completeSignIn = React.useCallback(
+    async (token: string) => {
+      setIsReady(false);
+      try {
+        await loadCurrentUser(token);
+        window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
+        notifyAuthChange();
+      } catch (error) {
+        clearAuthentication();
+        if (error instanceof ApiClientError) throw new Error(error.message);
+        throw error;
+      } finally {
+        setIsReady(true);
+      }
+    },
+    [clearAuthentication, loadCurrentUser],
+  );
+
+  const updateUser = React.useCallback((nextUser: CurrentUser) => {
+    setUser(nextUser);
+  }, []);
 
   const value = React.useMemo(
     () => ({
@@ -123,9 +131,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: Boolean(accessToken && user),
       isReady,
       completeSignIn,
+      updateUser,
       signOut: clearAuthentication,
     }),
-    [accessToken, clearAuthentication, completeSignIn, isReady, user],
+    [
+      accessToken,
+      clearAuthentication,
+      completeSignIn,
+      isReady,
+      updateUser,
+      user,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

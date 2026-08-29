@@ -15,7 +15,21 @@ export type CurrentUser = {
   avatar: string | null;
 };
 
-export function registerUser(input: { name: string; email: string; password: string }) {
+export type UpdateProfilePayload = {
+  name?: string;
+  avatar?: string;
+  phone?: string;
+  bio?: string;
+  designation?: string;
+  dateOfBirth?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
+};
+
+export function registerUser(input: {
+  name: string;
+  email: string;
+  password: string;
+}) {
   return apiClient<unknown>("/api/v1/auth/register", {
     method: "POST",
     body: input,
@@ -30,7 +44,10 @@ export async function loginUser(input: { email: string; password: string }) {
     expectedStatuses: 200,
   });
 
-  if (typeof response.data?.accessToken !== "string" || !response.data.accessToken) {
+  if (
+    typeof response.data?.accessToken !== "string" ||
+    !response.data.accessToken
+  ) {
     throw new Error("We couldn't sign you in. Please try again.");
   }
 
@@ -41,6 +58,18 @@ export function getCurrentUser(accessToken: string) {
   return apiClient<CurrentUser>("/api/v1/users/me", {
     method: "GET",
     accessToken,
+    expectedStatuses: 200,
+  });
+}
+
+export function updateProfile(
+  accessToken: string,
+  payload: UpdateProfilePayload,
+) {
+  return apiClient<CurrentUser>("/api/v1/users/update-profile", {
+    method: "PATCH",
+    accessToken,
+    body: payload,
     expectedStatuses: 200,
   });
 }
