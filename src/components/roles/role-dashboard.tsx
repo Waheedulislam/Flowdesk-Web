@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 
 import { RoleBadge } from "@/components/roles/role-badge";
+import { ActivityFeed } from "@/components/activity/activity-feed";
+import { useActivity } from "@/components/activity/hooks/use-activity";
 import { ProjectProgress } from "@/components/dashboard/project-progress";
 import { TaskOverview } from "@/components/dashboard/task-overview";
 import { Badge } from "@/components/ui/badge";
@@ -140,6 +142,7 @@ export function RoleDashboard() {
     isReady,
     workspaceId: activeWorkspace?.id,
   });
+  const activityState = useActivity({ limit: 5 });
 
   const projectStatistics = React.useMemo(() => {
     const map = new Map<string, ReturnType<typeof getProjectTaskStatistics>>();
@@ -516,6 +519,21 @@ export function RoleDashboard() {
           </Card>
         ))}
       </div>
+
+      <ActivityFeed
+        activities={activityState.data}
+        loading={activityState.loading}
+        error={activityState.error}
+        compact
+        action={
+          <Link
+            href="/activity"
+            className="text-sm text-primary hover:underline"
+          >
+            View all
+          </Link>
+        }
+      />
 
       <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <Card className="h-full">
@@ -927,7 +945,9 @@ export function RoleDashboard() {
             }[status];
 
             const percent =
-              dashboardStats.totalTasks === 0 ? 0 : Math.max(6, (count / dashboardStats.totalTasks) * 100);
+              dashboardStats.totalTasks === 0
+                ? 0
+                : Math.max(6, (count / dashboardStats.totalTasks) * 100);
 
             return (
               <div
@@ -935,7 +955,9 @@ export function RoleDashboard() {
                 className="rounded-2xl border border-border/80 bg-gradient-to-br from-background to-muted/20 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium ${meta.soft}`}>
+                  <div
+                    className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium ${meta.soft}`}
+                  >
                     <span className={`size-2 rounded-full ${meta.accent}`} />
                     {meta.title}
                   </div>

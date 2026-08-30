@@ -1,15 +1,17 @@
 "use client";
 
-import * as React from "react";
-import { recentActivity } from "@/lib/dashboard-data";
+import type { ActivityLog } from "@/lib/api/activity.api";
 import { ActivityItem } from "./activity-item";
 
-export function ActivityTimeline() {
-  const items = recentActivity;
+export function ActivityTimeline({
+  activities,
+}: {
+  activities: ActivityLog[];
+}) {
   return (
     <div className="space-y-3">
-      {items.map((it) => (
-        <ActivityItem key={it.id} item={it} />
+      {activities.map((activity) => (
+        <ActivityItem key={activity.id} activity={activity} />
       ))}
     </div>
   );
