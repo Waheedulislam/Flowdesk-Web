@@ -8,6 +8,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher";
+import { useNotifications } from "@/context/notification-context";
 import { getNavigationForRole, secondaryNav } from "@/lib/navigation";
 import { useRole } from "@/context/role-context";
 
@@ -22,6 +23,7 @@ interface SidebarProps {
  */
 export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const { role } = useRole();
+  const { unreadCount } = useNotifications();
   if (!role) return null;
   return (
     <aside
@@ -50,10 +52,18 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
           collapsed && "px-2",
         )}
       >
-        <SidebarNav sections={getNavigationForRole(role)} collapsed={collapsed} />
+        <SidebarNav
+          sections={getNavigationForRole(role, unreadCount)}
+          collapsed={collapsed}
+        />
       </div>
 
-      <div className={cn("border-t border-sidebar-border p-3", collapsed && "px-2")}>
+      <div
+        className={cn(
+          "border-t border-sidebar-border p-3",
+          collapsed && "px-2",
+        )}
+      >
         <SidebarNav sections={[secondaryNav]} collapsed={collapsed} />
         <div className={cn("mt-2", collapsed ? "flex justify-center" : "px-1")}>
           <Tooltip

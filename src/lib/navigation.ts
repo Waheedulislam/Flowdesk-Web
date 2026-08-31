@@ -60,7 +60,6 @@ export const navSections: NavSection[] = [
         title: "Notifications",
         href: "/notifications",
         icon: Bell,
-        badge: "3",
       },
     ],
   },
@@ -86,7 +85,10 @@ export const navSections: NavSection[] = [
   },
 ];
 
-export function getNavigationForRole(role: UserRole): NavSection[] {
+export function getNavigationForRole(
+  role: UserRole,
+  unreadCount = 0,
+): NavSection[] {
   const dashboard = {
     title: "Dashboard",
     href: "/dashboard",
@@ -124,7 +126,7 @@ export function getNavigationForRole(role: UserRole): NavSection[] {
     title: "Notifications",
     href: "/notifications",
     icon: Bell,
-    badge: "3",
+    ...(unreadCount > 0 ? { badge: String(unreadCount) } : {}),
   };
 
   const automate = {

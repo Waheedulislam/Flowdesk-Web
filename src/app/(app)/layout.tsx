@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { RequireAuthentication } from "@/components/auth/route-guard";
+import { NotificationProvider } from "@/context/notification-context";
 import { WorkspaceProvider } from "@/context/workspace-context";
 
 /**
@@ -14,9 +15,11 @@ export default function AppLayout({
 }>) {
   return (
     <RequireAuthentication>
-      <WorkspaceProvider>
-        <AppShell>{children}</AppShell>
-      </WorkspaceProvider>
+      <NotificationProvider>
+        <WorkspaceProvider>
+          <AppShell>{children}</AppShell>
+        </WorkspaceProvider>
+      </NotificationProvider>
     </RequireAuthentication>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +22,10 @@ import { useWorkspace } from "@/context/workspace-context";
 import type { ProjectRecord } from "@/lib/api/project.api";
 import { getProjectTaskStatistics } from "@/lib/project-task-statistics";
 
-export function ProjectsPage() {
+export function ProjectsPage({
+  initialProjectId,
+}: { initialProjectId?: string } = {}) {
+  const router = useRouter();
   const { accessToken, isReady } = useAuth();
   const { activeWorkspace, isLoading: workspaceLoading } = useWorkspace();
   const state = useProjects({
@@ -73,6 +77,15 @@ export function ProjectsPage() {
     }, 0);
     return () => window.clearTimeout(id);
   }, [activeWorkspace?.id]);
+  React.useEffect(() => {
+    if (!initialProjectId || state.loading || state.error) return;
+    const id = window.setTimeout(() => {
+      setSelected(
+        state.data.find((project) => project.id === initialProjectId) ?? null,
+      );
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [initialProjectId, state.data, state.error, state.loading]);
   const ownerOptions: ProjectOwnerOption[] = [];
   const actions = useProjectActions({
     accessToken,
@@ -124,6 +137,15 @@ export function ProjectsPage() {
       <Message
         title="No workspace selected"
         message="Select a workspace to view its projects."
+      />
+    );
+  if (initialProjectId && !selected)
+    return (
+      <Message
+        title="Project unavailable"
+        message="This project is not available in the selected workspace."
+        action="Back to projects"
+        onAction={() => router.push("/projects")}
       />
     );
   return (
@@ -239,7 +261,9 @@ export function ProjectsPage() {
               canManage={canManage}
               workspaceRole={activeWorkspace.role}
               onEdit={() => setSettings(true)}
-              onBack={() => setSelected(null)}
+              onBack={() =>
+                initialProjectId ? router.push("/projects") : setSelected(null)
+              }
             />
           )}
         </div>
