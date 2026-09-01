@@ -4,9 +4,16 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import Link from "next/link";
 
-export function AnalyticsHeader() {
+export function AnalyticsHeader({
+  workspaceName,
+  loading = false,
+  onRefresh,
+}: {
+  workspaceName?: string;
+  loading?: boolean;
+  onRefresh?: () => void;
+}) {
   return (
     <Card className="mb-4">
       <CardHeader className="flex items-center justify-between">
@@ -19,20 +26,21 @@ export function AnalyticsHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          <select className="rounded-md border px-3 py-2 text-sm">
-            <option>FlowDesk Core</option>
-            <option>Growth Team</option>
-          </select>
+          <span className="rounded-md border px-3 py-2 text-sm">
+            {workspaceName ?? "No workspace selected"}
+          </span>
 
           <button className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
             <Calendar className="size-4" /> This week
           </button>
 
-          <Button variant="ghost" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefresh}
+            disabled={loading}
+          >
             Refresh
-          </Button>
-          <Button variant="default" size="sm">
-            Export
           </Button>
         </div>
       </CardHeader>

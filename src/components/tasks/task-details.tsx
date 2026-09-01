@@ -11,6 +11,7 @@ import {
   TaskStatusBadge,
 } from "@/components/tasks/task-status-badge";
 import type { TaskItem } from "@/lib/tasks-data";
+import type { TaskCommentRecord, TaskFileRecord } from "@/lib/api/task.api";
 
 interface TaskDetailsProps {
   task: TaskItem | null;
@@ -18,6 +19,17 @@ interface TaskDetailsProps {
   onOpenChange: (open: boolean) => void;
   onEdit: (task: TaskItem) => void;
   onDeleteRequest: (task: TaskItem) => void;
+  currentUserId: string | null;
+  comments: TaskCommentRecord[];
+  files: TaskFileRecord[];
+  collaborationLoading: boolean;
+  collaborationError: string | null;
+  collaborationMutating: boolean;
+  onRetryCollaboration: () => void;
+  onAddComment: (comment: string) => Promise<void>;
+  onDeleteComment: (commentId: string) => Promise<void>;
+  onUploadFile: (file: File) => Promise<void>;
+  onDeleteFile: (fileId: string) => Promise<void>;
 }
 
 export function TaskDetails({
@@ -26,8 +38,75 @@ export function TaskDetails({
   onOpenChange,
   onEdit,
   onDeleteRequest,
+  currentUserId,
+  comments,
+  files,
+  collaborationLoading,
+  collaborationError,
+  collaborationMutating,
+  onRetryCollaboration,
+  onAddComment,
+  onDeleteComment,
+  onUploadFile,
+  onDeleteFile,
 }: TaskDetailsProps) {
+  const [comment, setComment] = React.useState("");
+  const [formError, setFormError] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   if (!open || !task) return null;
+
+  const submitComment = async () => {
+    const value = comment.trim();
+    if (!value) return;
+    setFormError(null);
+    try {
+      await onAddComment(value);
+      setComment("");
+    } catch (cause) {
+      setFormError(
+        cause instanceof Error ? cause.message : "Unable to add comment.",
+      );
+    }
+  };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setFormError(null);
+    try {
+      await onUploadFile(file);
+    } catch (cause) {
+      setFormError(
+        cause instanceof Error ? cause.message : "Unable to upload file.",
+      );
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    setFormError(null);
+    try {
+      await onDeleteComment(commentId);
+    } catch (cause) {
+      setFormError(
+        cause instanceof Error ? cause.message : "Unable to delete comment.",
+      );
+    }
+  };
+
+  const handleDeleteFile = async (fileId: string) => {
+    setFormError(null);
+    try {
+      await onDeleteFile(fileId);
+    } catch (cause) {
+      setFormError(
+        cause instanceof Error ? cause.message : "Unable to delete file.",
+      );
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/70 p-0 backdrop-blur-sm sm:items-center sm:p-3">
@@ -114,24 +193,43 @@ export function TaskDetails({
               <CardTitle>Comments</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {task.commentsList.length > 0 ? (
-                task.commentsList.map((comment) => (
+              {collaborationLoading ? (
+                <p className="text-sm text-muted-foreground">
+                  Loading comments...
+                </p>
+              ) : comments.length > 0 ? (
+                comments.map((item) => (
                   <div
-                    key={comment.id}
+                    key={item.id}
                     className="rounded-lg border border-border/70 bg-background/70 p-3"
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar name={comment.author} className="size-8" />
+                      <Avatar
+                        name={item.user.name}
+                        src={item.user.avatar ?? undefined}
+                        className="size-8"
+                      />
                       <div>
-                        <p className="font-medium">{comment.author}</p>
+                        <p className="font-medium">{item.user.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {comment.time}
+                          {new Date(item.createdAt).toLocaleString()}
                         </p>
                       </div>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
-                      {comment.message}
+                      {item.comment}
                     </p>
+                    {item.userId === currentUserId ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2"
+                        disabled={collaborationMutating}
+                        onClick={() => void handleDeleteComment(item.id)}
+                      >
+                        Delete
+                      </Button>
+                    ) : null}
                   </div>
                 ))
               ) : (
@@ -141,23 +239,56 @@ export function TaskDetails({
               )}
               <div className="space-y-2">
                 <textarea
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
                   className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   placeholder="Write a comment"
+                  disabled={collaborationMutating}
                 />
-                <Button className="w-full sm:w-auto">Send</Button>
+                <Button
+                  className="w-full sm:w-auto"
+                  disabled={!comment.trim() || collaborationMutating}
+                  onClick={() => void submitComment()}
+                >
+                  Send
+                </Button>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Attachments</CardTitle>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle>Attachments</CardTitle>
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="sr-only"
+                    onChange={(event) => void handleFileChange(event)}
+                    disabled={collaborationMutating}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={collaborationMutating}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Paperclip className="size-4" />
+                    Upload
+                  </Button>
+                </>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {task.attachmentsList.length > 0 ? (
-                task.attachmentsList.map((attachment) => (
+              {collaborationLoading ? (
+                <p className="text-sm text-muted-foreground">
+                  Loading attachments...
+                </p>
+              ) : files.length > 0 ? (
+                files.map((file) => (
                   <div
-                    key={attachment.id}
+                    key={file.id}
                     className="flex items-center justify-between rounded-lg border border-border/70 bg-background/70 p-3"
                   >
                     <div className="flex items-center gap-3">
@@ -165,15 +296,28 @@ export function TaskDetails({
                         <Paperclip className="size-4" />
                       </div>
                       <div>
-                        <p className="font-medium">{attachment.name}</p>
+                        <a
+                          href={file.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-medium hover:underline"
+                        >
+                          {file.fileName}
+                        </a>
                         <p className="text-sm text-muted-foreground">
-                          {attachment.type} · {attachment.size}
+                          Uploaded by {file.uploader.name} ·{" "}
+                          {new Date(file.createdAt).toLocaleString()}
                         </p>
                       </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {attachment.uploadedBy}
-                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={collaborationMutating}
+                      onClick={() => void handleDeleteFile(file.id)}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 ))
               ) : (
@@ -181,6 +325,22 @@ export function TaskDetails({
                   No attachments yet.
                 </p>
               )}
+              {collaborationError ? (
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                  <p>{collaborationError}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={onRetryCollaboration}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : null}
+              {formError ? (
+                <p className="text-sm text-destructive">{formError}</p>
+              ) : null}
             </CardContent>
           </Card>
 

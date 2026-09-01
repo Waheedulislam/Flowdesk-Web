@@ -1,12 +1,35 @@
 "use client";
 
 import * as React from "react";
-import { taskDistribution } from "@/lib/analytics-data";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export function TaskDistributionChart() {
-  const data = taskDistribution;
+export type TaskDistributionData = {
+  TODO: number;
+  IN_PROGRESS: number;
+  IN_REVIEW: number;
+  DONE: number;
+  OVERDUE: number;
+};
+
+export function TaskDistributionChart({
+  data,
+}: {
+  data: TaskDistributionData | null;
+}) {
+  if (!data) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Task Distribution</CardTitle>
+        </CardHeader>
+        <CardContent className="flex min-h-48 items-center justify-center text-sm text-muted-foreground">
+          No task analytics available for this workspace.
+        </CardContent>
+      </Card>
+    );
+  }
+
   const total = Object.values(data).reduce((a, b) => a + b, 0);
 
   return (
@@ -34,7 +57,7 @@ export function TaskDistributionChart() {
                       "bg-info": k === "IN_REVIEW",
                       "bg-muted": k === "TODO",
                     })}
-                    style={{ width: `${(v / total) * 100}%` }}
+                    style={{ width: total ? `${(v / total) * 100}%` : "0%" }}
                   />
                 </div>
               </div>

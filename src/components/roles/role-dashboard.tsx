@@ -29,13 +29,13 @@ import { useWorkspace } from "@/context/workspace-context";
 import { useProjects } from "@/components/projects/hooks/use-projects";
 import { useTasks } from "@/components/tasks/hooks/use-tasks";
 import { useWorkspaceMembers } from "@/components/workspace/hooks/use-workspace-members";
-import { getProjectTaskStatistics } from "@/lib/project-task-statistics";
+import { useWorkspaceAnalytics } from "@/components/analytics/hooks/use-workspace-analytics";
+import type { ProjectTaskStatistics } from "@/lib/project-task-statistics";
 import type {
   ProjectStatus,
   TaskDistributionSlice,
 } from "@/lib/dashboard-data";
 import type { ProjectRecord } from "@/lib/api/project.api";
-import type { TaskRecord } from "@/lib/api/task.api";
 
 const ACTIVE_PROJECT_STATUSES = new Set(["ACTIVE", "IN_PROGRESS"]);
 const statusOrder = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
@@ -61,13 +61,6 @@ function isDueToday(value: string | null | undefined) {
     dueDate.getMonth() === today.getMonth() &&
     dueDate.getDate() === today.getDate()
   );
-}
-
-function isOverdue(task: TaskRecord) {
-  if (!task.dueDate || task.status === "DONE") return false;
-  const due = new Date(task.dueDate);
-  if (Number.isNaN(due.getTime())) return false;
-  return due.getTime() < Date.now();
 }
 
 function mapProjectStatusForProgress(
@@ -142,49 +135,54 @@ export function RoleDashboard() {
     isReady,
     workspaceId: activeWorkspace?.id,
   });
+  const analyticsState = useWorkspaceAnalytics();
   const activityState = useActivity({ limit: 5 });
 
   const projectStatistics = React.useMemo(() => {
-    const map = new Map<string, ReturnType<typeof getProjectTaskStatistics>>();
-    projectsState.data.forEach((project) => {
-      const projectTasks = taskState.tasks.filter(
-        (task) => task.projectId === project.id,
+    const map = new Map<string, ProjectTaskStatistics>();
+    analyticsState.projects.forEach((project) => {
+      const inReviewTasks = Math.max(
+        0,
+        project.totalTasks -
+          project.todoTasks -
+          project.inProgressTasks -
+          project.completedTasks,
       );
-      map.set(project.id, getProjectTaskStatistics(projectTasks));
+      map.set(project.projectId, {
+        totalTasks: project.totalTasks,
+        completedTasks: project.completedTasks,
+        progress: project.completionRate,
+        statusCounts: {
+          TODO: project.todoTasks,
+          IN_PROGRESS: project.inProgressTasks,
+          IN_REVIEW: inReviewTasks,
+          DONE: project.completedTasks,
+        },
+      });
     });
     return map;
-  }, [projectsState.data, taskState.tasks]);
+  }, [analyticsState.projects]);
 
   const dashboardStats = React.useMemo(() => {
-    const totalProjects = projectsState.data.length;
+    const totalProjects = analyticsState.workspace.totalProjects;
     const activeProjects = projectsState.data.filter((project) =>
       ACTIVE_PROJECT_STATUSES.has(project.status),
     ).length;
-    const totalTasks = taskState.tasks.length;
-    const completedTasks = taskState.tasks.filter(
-      (task) => task.status === "DONE",
-    ).length;
-    const overdueTasks = taskState.tasks.filter((task) =>
-      isOverdue(task),
-    ).length;
+    const totalTasks = analyticsState.workspace.totalTasks;
+    const completedTasks = analyticsState.workspace.completedTasks;
+    const overdueTasks = analyticsState.workspace.overdueTasks;
     const dueTodayTasks = taskState.tasks.filter((task) =>
       isDueToday(task.dueDate),
     ).length;
-    const todoTasks = taskState.tasks.filter(
-      (task) => task.status === "TODO",
-    ).length;
-    const inProgressTasks = taskState.tasks.filter(
-      (task) => task.status === "IN_PROGRESS",
-    ).length;
-    const inReviewTasks = taskState.tasks.filter(
-      (task) => task.status === "IN_REVIEW",
-    ).length;
-    const doneTasks = taskState.tasks.filter(
-      (task) => task.status === "DONE",
-    ).length;
-    const teamMembers = membersState.members.length;
-    const completionRate =
-      totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+    const todoTasks = analyticsState.workspace.todoTasks;
+    const inProgressTasks = analyticsState.workspace.inProgressTasks;
+    const inReviewTasks = Math.max(
+      0,
+      totalTasks - todoTasks - inProgressTasks - completedTasks,
+    );
+    const doneTasks = completedTasks;
+    const teamMembers = analyticsState.workspace.totalMembers;
+    const completionRate = analyticsState.workspace.completionRate;
 
     return {
       totalProjects,
@@ -200,7 +198,7 @@ export function RoleDashboard() {
       teamMembers,
       completionRate,
     };
-  }, [membersState.members.length, projectsState.data, taskState.tasks]);
+  }, [analyticsState.workspace, projectsState.data, taskState.tasks]);
 
   const distribution = React.useMemo<TaskDistributionSlice[]>(() => {
     const counts: Record<
@@ -214,16 +212,17 @@ export function RoleDashboard() {
       OVERDUE: 0,
     };
 
-    taskState.tasks.forEach((task) => {
-      if (task.status === "DONE") {
-        counts.DONE += 1;
-        return;
-      }
-      if (task.status === "TODO") counts.TODO += 1;
-      if (task.status === "IN_PROGRESS") counts.IN_PROGRESS += 1;
-      if (task.status === "IN_REVIEW") counts.IN_REVIEW += 1;
-      if (isOverdue(task)) counts.OVERDUE += 1;
-    });
+    counts.TODO = analyticsState.workspace.todoTasks;
+    counts.IN_PROGRESS = analyticsState.workspace.inProgressTasks;
+    counts.DONE = analyticsState.workspace.completedTasks;
+    counts.OVERDUE = analyticsState.workspace.overdueTasks;
+    counts.IN_REVIEW = Math.max(
+      0,
+      analyticsState.workspace.totalTasks -
+        counts.TODO -
+        counts.IN_PROGRESS -
+        counts.DONE,
+    );
 
     return [
       { key: "TODO", label: "To do", count: counts.TODO, tone: "muted" },
@@ -247,7 +246,7 @@ export function RoleDashboard() {
         tone: "destructive",
       },
     ];
-  }, [taskState.tasks]);
+  }, [analyticsState.workspace]);
 
   const recentProjects = React.useMemo(
     () =>
@@ -362,7 +361,13 @@ export function RoleDashboard() {
     },
   ];
 
-  if (!user || !role || !isReady || workspaceLoading) {
+  if (
+    !user ||
+    !role ||
+    !isReady ||
+    workspaceLoading ||
+    analyticsState.loading
+  ) {
     return <DashboardSkeleton />;
   }
 
@@ -426,7 +431,8 @@ export function RoleDashboard() {
       {workspaceError ||
       projectsState.error ||
       taskState.error ||
-      membersState.error ? (
+      membersState.error ||
+      analyticsState.error ? (
         <Card className="border-destructive/30 bg-destructive/5">
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
@@ -439,7 +445,8 @@ export function RoleDashboard() {
                   {workspaceError ??
                     projectsState.error ??
                     taskState.error ??
-                    membersState.error}
+                    membersState.error ??
+                    analyticsState.error}
                 </p>
               </div>
             </div>
@@ -450,6 +457,7 @@ export function RoleDashboard() {
                 void projectsState.reload();
                 void taskState.reload();
                 void membersState.reload();
+                void analyticsState.reload();
               }}
             >
               Retry

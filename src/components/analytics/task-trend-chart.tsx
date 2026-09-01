@@ -1,11 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { completionTrend } from "@/lib/analytics-data";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
-export function TaskTrendChart() {
-  const data = completionTrend;
+export function TaskTrendChart({ data }: { data?: number[] }) {
+  if (!data?.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Task Completion Trend</CardTitle>
+        </CardHeader>
+        <CardContent className="flex min-h-48 items-center justify-center text-sm text-muted-foreground">
+          Completion trend data is not available from the workspace analytics
+          API.
+        </CardContent>
+      </Card>
+    );
+  }
+
   const max = Math.max(...data);
 
   return (

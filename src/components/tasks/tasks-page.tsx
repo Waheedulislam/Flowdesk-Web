@@ -5,6 +5,7 @@ import { Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { useTasks, type TaskProject } from "@/components/tasks/hooks/use-tasks";
+import { useTaskCollaboration } from "@/components/tasks/hooks/use-task-collaboration";
 import { KanbanBoard } from "@/components/tasks/kanban-board";
 import { TaskDetails } from "@/components/tasks/task-details";
 import { TaskEditorDialog } from "@/components/tasks/task-editor-dialog";
@@ -87,7 +88,7 @@ function toTaskItem(
 }
 
 export function TasksPage() {
-  const { accessToken, isReady } = useAuth();
+  const { accessToken, isReady, user } = useAuth();
   const { activeWorkspace, isLoading: workspaceLoading } = useWorkspace();
   const projectsState = useProjects({
     accessToken,
@@ -126,6 +127,12 @@ export function TasksPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
   const [taskToDelete, setTaskToDelete] = React.useState<TaskItem | null>(null);
   const [mutationLoading, setMutationLoading] = React.useState(false);
+  const collaboration = useTaskCollaboration({
+    accessToken,
+    isReady,
+    taskId: selectedTask?.id ?? null,
+    enabled: detailsOpen,
+  });
 
   const assigneeOptions = React.useMemo(() => {
     const options = new Map<string, AssigneeOption>();
@@ -443,6 +450,17 @@ export function TasksPage() {
           setTaskToDelete(task);
           setDeleteConfirmOpen(true);
         }}
+        currentUserId={user?.id ?? null}
+        comments={collaboration.comments}
+        files={collaboration.files}
+        collaborationLoading={collaboration.loading}
+        collaborationError={collaboration.error}
+        collaborationMutating={collaboration.mutating}
+        onRetryCollaboration={() => void collaboration.reload()}
+        onAddComment={collaboration.addComment}
+        onDeleteComment={collaboration.removeComment}
+        onUploadFile={collaboration.uploadFile}
+        onDeleteFile={collaboration.removeFile}
       />
       <TaskEditorDialog
         open={editorOpen}
