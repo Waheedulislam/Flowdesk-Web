@@ -11,7 +11,11 @@ const statuses: ProjectStatus[] = [
   "COMPLETED",
   "ARCHIVED",
 ];
-export type ProjectOwnerOption = { id: string; name: string };
+export type ProjectOwnerOption = {
+  id: string;
+  name: string;
+  avatar?: string | null;
+};
 export function ProjectFilters(p: {
   search: string;
   onSearchChange: (v: string) => void;
@@ -53,6 +57,7 @@ export function ProjectFilters(p: {
           value={p.owner}
           onChange={(e) => p.onOwnerChange(e.target.value)}
           disabled={!p.owners.length}
+          aria-label="Filter projects by owner"
           className="h-9 rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
           <option value="All">All owners</option>

@@ -83,7 +83,7 @@ export function ProjectCard({
             label="Tasks"
             value={statistics ? String(statistics.totalTasks) : "—"}
           />
-          <Stat label="Owner" value="—" />
+          <Stat label="Owner" value={project.creator?.name ?? "Unknown"} />
         </div>
         <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-4 text-xs text-muted-foreground">
           <span>Updated {formatDate(project.updatedAt)}</span>

@@ -79,8 +79,9 @@ export function UserMenu({
         <DropdownMenuItem
           variant="destructive"
           onClick={() => {
-            signOut();
-            if (signOutRedirect) router.replace(signOutRedirect);
+            void signOut().finally(() => {
+              if (signOutRedirect) router.replace(signOutRedirect);
+            });
           }}
         >
           <LogOut />

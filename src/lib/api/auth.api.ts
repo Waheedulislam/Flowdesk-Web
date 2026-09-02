@@ -62,6 +62,14 @@ export function getCurrentUser(accessToken: string) {
   });
 }
 
+export function logoutUser() {
+  return apiClient<null>("/api/v1/auth/logout", {
+    method: "POST",
+    expectedStatuses: 200,
+    skipAuthRefresh: true,
+  });
+}
+
 export function updateProfile(
   accessToken: string,
   payload: UpdateProfilePayload,

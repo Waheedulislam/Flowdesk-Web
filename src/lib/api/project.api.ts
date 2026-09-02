@@ -18,10 +18,16 @@ export type ProjectRecord = {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  creator?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+  };
 };
 
 export type ProjectDetail = ProjectRecord & {
-  creator: { id: string; name: string; email: string; avatar: string | null };
+  creator: NonNullable<ProjectRecord["creator"]>;
 };
 
 export type ProjectMemberRecord = {

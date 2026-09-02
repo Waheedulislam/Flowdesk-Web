@@ -86,14 +86,38 @@ export function ProjectsPage({
     }, 0);
     return () => window.clearTimeout(id);
   }, [initialProjectId, state.data, state.error, state.loading]);
-  const ownerOptions: ProjectOwnerOption[] = [];
+  const ownerOptions = React.useMemo<ProjectOwnerOption[]>(() => {
+    const owners = new Map<string, ProjectOwnerOption>();
+    state.data.forEach((project) => {
+      if (project.creator) {
+        owners.set(project.creator.id, {
+          id: project.creator.id,
+          name: project.creator.name,
+          avatar: project.creator.avatar,
+        });
+      }
+    });
+    return [...owners.values()].sort((left, right) =>
+      left.name.localeCompare(right.name),
+    );
+  }, [state.data]);
+  const effectiveOwner =
+    owner === "All" || ownerOptions.some((option) => option.id === owner)
+      ? owner
+      : "All";
   const actions = useProjectActions({
     accessToken,
     workspaceId: activeWorkspace?.id,
     onCreated: (p) => state.setData((items) => [p, ...items]),
     onUpdated: (p) => {
-      state.setData((items) => items.map((x) => (x.id === p.id ? p : x)));
-      setSelected((x) => (x?.id === p.id ? p : x));
+      state.setData((items) =>
+        items.map((x) =>
+          x.id === p.id ? { ...x, ...p, creator: p.creator ?? x.creator } : x,
+        ),
+      );
+      setSelected((x) =>
+        x?.id === p.id ? { ...x, ...p, creator: p.creator ?? x.creator } : x,
+      );
     },
     onDeleted: (id) => {
       state.setData((items) => items.filter((x) => x.id !== id));
@@ -110,7 +134,7 @@ export function ProjectsPage({
               .toLowerCase()
               .includes(search.toLowerCase()) &&
             (status === "All" || p.status === status) &&
-            (owner === "All" || p.createdBy === owner),
+            (effectiveOwner === "All" || p.createdBy === effectiveOwner),
         )
         .sort((a, b) =>
           sort === "name"
@@ -119,7 +143,7 @@ export function ProjectsPage({
               ? b.createdAt.localeCompare(a.createdAt)
               : b.updatedAt.localeCompare(a.updatedAt),
         ),
-    [state.data, search, status, owner, sort],
+    [state.data, search, status, effectiveOwner, sort],
   );
   if (!isReady || workspaceLoading || state.loading)
     return <Message title="Loading projects..." />;

@@ -2,8 +2,16 @@
 
 import * as React from "react";
 
-import { ApiClientError } from "@/lib/api/client";
-import { getCurrentUser, type CurrentUser } from "@/lib/api/auth.api";
+import {
+  ApiClientError,
+  setAccessTokenRefreshedHandler,
+  setAuthenticationExpiredHandler,
+} from "@/lib/api/client";
+import {
+  getCurrentUser,
+  logoutUser,
+  type CurrentUser,
+} from "@/lib/api/auth.api";
 
 const ACCESS_TOKEN_STORAGE_KEY = "flowdesk.accessToken";
 const AUTH_CHANGE_EVENT = "flowdesk-auth-change";
@@ -15,7 +23,7 @@ type AuthContextValue = {
   isReady: boolean;
   completeSignIn: (accessToken: string) => Promise<void>;
   updateUser: (user: CurrentUser) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 };
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -58,6 +66,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     notifyAuthChange();
   }, []);
+
+  React.useEffect(() => {
+    const handleRefreshedToken = (token: string) => {
+      window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
+      notifyAuthChange();
+    };
+    setAccessTokenRefreshedHandler(handleRefreshedToken);
+    setAuthenticationExpiredHandler(clearAuthentication);
+    return () => {
+      setAccessTokenRefreshedHandler(null);
+      setAuthenticationExpiredHandler(null);
+    };
+  }, [clearAuthentication]);
 
   const loadCurrentUser = React.useCallback(async (token: string) => {
     const response = await getCurrentUser(token);
@@ -124,6 +145,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(nextUser);
   }, []);
 
+  const signOut = React.useCallback(async () => {
+    try {
+      await logoutUser();
+    } finally {
+      clearAuthentication();
+    }
+  }, [clearAuthentication]);
+
   const value = React.useMemo(
     () => ({
       accessToken,
@@ -132,16 +161,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isReady,
       completeSignIn,
       updateUser,
-      signOut: clearAuthentication,
+      signOut,
     }),
-    [
-      accessToken,
-      clearAuthentication,
-      completeSignIn,
-      isReady,
-      updateUser,
-      user,
-    ],
+    [accessToken, completeSignIn, isReady, signOut, updateUser, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

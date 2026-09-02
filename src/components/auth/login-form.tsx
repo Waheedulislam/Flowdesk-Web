@@ -55,7 +55,7 @@ export function LoginForm() {
 
     try {
       const response = await loginUser({ email: email.trim(), password });
-      completeSignIn(response.data.accessToken);
+      await completeSignIn(response.data.accessToken);
       setStatus("success");
       router.replace("/dashboard");
     } catch (error) {
