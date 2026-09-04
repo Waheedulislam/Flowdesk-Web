@@ -2,19 +2,36 @@
 
 import * as React from "react";
 
-import { getWorkspaceMembers, type WorkspaceMemberRecord } from "@/lib/api/workspace.api";
+import {
+  getWorkspaceMembers,
+  type WorkspaceMemberRecord,
+} from "@/lib/api/workspace.api";
 
-type Options = { accessToken: string | null; isReady: boolean; workspaceId: string | undefined };
+type Options = {
+  accessToken: string | null;
+  isReady: boolean;
+  workspaceId: string | undefined;
+};
 
-export function useWorkspaceMembers({ accessToken, isReady, workspaceId }: Options) {
+export function useWorkspaceMembers({
+  accessToken,
+  isReady,
+  workspaceId,
+}: Options) {
   const [members, setMembers] = React.useState<WorkspaceMemberRecord[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const requestId = React.useRef(0);
 
   const reload = React.useCallback(async () => {
-    if (!isReady || !accessToken || !workspaceId) return;
+    if (!isReady || !accessToken || !workspaceId) {
+      setMembers([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
     const id = ++requestId.current;
+    setMembers([]);
     setLoading(true);
     setError(null);
     try {
@@ -23,7 +40,11 @@ export function useWorkspaceMembers({ accessToken, isReady, workspaceId }: Optio
     } catch (requestError) {
       if (id === requestId.current) {
         setMembers([]);
-        setError(requestError instanceof Error ? requestError.message : "Failed to load workspace members.");
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Failed to load workspace members.",
+        );
       }
     } finally {
       if (id === requestId.current) setLoading(false);
