@@ -33,6 +33,10 @@ export function WorkspaceSettings({
   const [description, setDescription] = React.useState(workspace.description);
   const [status, setStatus] = React.useState(workspace.status);
 
+  const currentName = name || workspace.name;
+  const currentDescription = description || workspace.description;
+  const currentStatus = status || workspace.status;
+
   const [leaveDialogOpen, setLeaveDialogOpen] = React.useState(false);
   const [leaving, setLeaving] = React.useState(false);
 
@@ -88,7 +92,7 @@ export function WorkspaceSettings({
 
                 <Input
                   id="workspace-name"
-                  value={name}
+                  value={currentName}
                   onChange={(event) => setName(event.target.value)}
                 />
               </div>
@@ -98,7 +102,7 @@ export function WorkspaceSettings({
 
                 <Input
                   id="workspace-status"
-                  value={status}
+                  value={currentStatus}
                   onChange={(event) => setStatus(event.target.value)}
                 />
               </div>
@@ -111,7 +115,7 @@ export function WorkspaceSettings({
 
               <textarea
                 id="workspace-description"
-                value={description}
+                value={currentDescription}
                 onChange={(event) => setDescription(event.target.value)}
                 className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
               />
@@ -192,7 +196,6 @@ export function WorkspaceSettings({
                 </p>
               </div>
             )}
-
           </CardContent>
         </Card>
       </div>
