@@ -13,6 +13,7 @@ export type CurrentUser = {
   role: BackendUserRole;
   status: string;
   avatar: string | null;
+  avatarPublicId: string | null;
 };
 
 export type UpdateProfilePayload = {
@@ -78,6 +79,26 @@ export function updateProfile(
     method: "PATCH",
     accessToken,
     body: payload,
+    expectedStatuses: 200,
+  });
+}
+
+export function uploadAvatar(accessToken: string, file: File) {
+  const body = new FormData();
+  body.append("avatar", file);
+
+  return apiClient<CurrentUser>("/api/v1/users/me/avatar", {
+    method: "POST",
+    accessToken,
+    body,
+    expectedStatuses: 200,
+  });
+}
+
+export function removeAvatar(accessToken: string) {
+  return apiClient<CurrentUser>("/api/v1/users/me/avatar", {
+    method: "DELETE",
+    accessToken,
     expectedStatuses: 200,
   });
 }

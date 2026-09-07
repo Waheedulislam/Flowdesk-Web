@@ -142,7 +142,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateUser = React.useCallback((nextUser: CurrentUser) => {
-    setUser(nextUser);
+    setUser((currentUser) => {
+      if (!currentUser) return nextUser;
+      return nextUser;
+    });
   }, []);
 
   const signOut = React.useCallback(async () => {

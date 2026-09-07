@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Camera, LockKeyhole } from "lucide-react";
+import { Camera, LockKeyhole, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/auth-context";
-import { updateProfile } from "@/lib/api/auth.api";
+import { removeAvatar, updateProfile, uploadAvatar } from "@/lib/api/auth.api";
 import { RoleBadge } from "@/components/roles/role-badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,18 +20,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+function withCacheBuster(url: string | null | undefined) {
+  if (!url) return null;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${Date.now()}`;
+}
+
 export default function ProfilePage() {
   const { accessToken, updateUser, user } = useAuth();
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [name, setName] = React.useState(user?.name ?? "");
   const [nameError, setNameError] = React.useState<string | null>(null);
   const [formError, setFormError] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [selectedPreview, setSelectedPreview] = React.useState<string | null>(
+    null,
+  );
+  const [avatarError, setAvatarError] = React.useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!selectedPreview) return;
+    return () => {
+      if (selectedPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(selectedPreview);
+      }
+    };
+  }, [selectedPreview]);
 
   if (!user) {
     return (
       <p className="text-sm text-muted-foreground">Loading your profile…</p>
     );
   }
+
+  const currentAvatarUrl = selectedPreview ?? user.avatar ?? undefined;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -75,6 +102,97 @@ export default function ProfilePage() {
     }
   }
 
+  function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      setAvatarError("Use a JPEG, PNG, or WebP image file.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_BYTES) {
+      setAvatarError("Please choose an image smaller than 5 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setAvatarError(null);
+    setSelectedFile(file);
+    setSelectedPreview(URL.createObjectURL(file));
+    event.target.value = "";
+  }
+
+  async function handleAvatarUpload() {
+    if (!accessToken || !selectedFile) {
+      setAvatarError("Select an image to upload first.");
+      return;
+    }
+
+    setAvatarError(null);
+    setIsUploadingAvatar(true);
+
+    try {
+      const response = await uploadAvatar(accessToken, selectedFile);
+      updateUser({
+        ...response.data,
+        avatar: withCacheBuster(response.data.avatar) ?? null,
+      });
+      setSelectedFile(null);
+      setSelectedPreview(null);
+      toast.success("Profile photo updated successfully");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "We couldn't upload your avatar. Please try again.";
+      setAvatarError(message);
+      toast.error("Couldn't upload your avatar", { description: message });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  }
+
+  async function handleAvatarRemove() {
+    if (!accessToken) {
+      setAvatarError("Your session is no longer valid. Please sign in again.");
+      return;
+    }
+
+    setAvatarError(null);
+    setIsUploadingAvatar(true);
+
+    try {
+      const response = await removeAvatar(accessToken);
+      updateUser({
+        ...response.data,
+        avatar: null,
+      });
+      setSelectedFile(null);
+      setSelectedPreview(null);
+      toast.success("Profile photo removed successfully");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "We couldn't remove your avatar. Please try again.";
+      setAvatarError(message);
+      toast.error("Couldn't remove your avatar", { description: message });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  }
+
+  function handleCancelPreview() {
+    setSelectedFile(null);
+    setSelectedPreview(null);
+    setAvatarError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header>
@@ -95,22 +213,75 @@ export default function ProfilePage() {
             <div className="flex items-center gap-4">
               <Avatar
                 name={user.name}
-                src={user.avatar ?? undefined}
+                src={currentAvatarUrl}
                 className="size-16 text-lg"
               />
               <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
                 <Button
                   type="button"
                   variant="outline"
-                  disabled
-                  title="Avatar changes are not available yet."
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingAvatar}
                 >
                   <Camera />
                   Change avatar
                 </Button>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Avatar changes are not available yet.
-                </p>
+                {selectedPreview ? (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      Selected image ready to upload.
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancelPreview}
+                    >
+                      <X className="size-4" />
+                      Cancel
+                    </Button>
+                  </div>
+                ) : null}
+                {selectedPreview ? (
+                  <div className="mt-3 flex items-center gap-2">
+                    <Button
+                      type="button"
+                      onClick={handleAvatarUpload}
+                      disabled={isUploadingAvatar}
+                    >
+                      {isUploadingAvatar ? (
+                        <>
+                          <Spinner />
+                          Uploading…
+                        </>
+                      ) : (
+                        "Upload avatar"
+                      )}
+                    </Button>
+                  </div>
+                ) : null}
+                {user.avatar ? (
+                  <div className="mt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleAvatarRemove}
+                      disabled={isUploadingAvatar}
+                    >
+                      Remove avatar
+                    </Button>
+                  </div>
+                ) : null}
+                {avatarError ? (
+                  <p className="mt-2 text-xs text-destructive">{avatarError}</p>
+                ) : null}
               </div>
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
