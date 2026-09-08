@@ -192,10 +192,16 @@ export function MemberTable({
 
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <Avatar name={member.user.name} className="size-9" />
+                        <Avatar
+                          name={member.user.name}
+                          src={member.user.avatar ?? undefined}
+                          className="size-9"
+                        />
 
                         <div className="min-w-0">
-                          <p className="truncate font-medium">{member.user.name}</p>
+                          <p className="truncate font-medium">
+                            {member.user.name}
+                          </p>
 
                           <p className="max-w-56 truncate text-xs text-muted-foreground">
                             {member.user.email}

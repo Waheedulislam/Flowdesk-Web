@@ -28,7 +28,6 @@ import { useWorkspace } from "@/context/workspace-context";
 import type {
   WorkspaceInvitation,
   WorkspaceMemberRecord,
-  WorkspaceMemberRole,
 } from "@/lib/api/workspace.api";
 
 export function WorkspacePage() {
@@ -129,17 +128,13 @@ export function WorkspacePage() {
     memberCount: memberState.members.length,
     projectCount: projectsState.data.length,
   };
-  const updateMember = (memberId: string, nextRole: WorkspaceMemberRole) =>
-    memberState.setMembers((members) =>
-      members.map((member) =>
-        member.id === memberId ? { ...member, role: nextRole } : member,
-      ),
-    );
+  const updateMember = () => void memberState.reload();
   const removeMember = (memberId: string) => {
     const member = memberState.members.find((item) => item.id === memberId);
     memberState.setMembers((members) =>
       members.filter((item) => item.id !== memberId),
     );
+    void memberState.reload();
     if (member)
       toast.success("Member removed successfully", {
         description: `${member.user.name} has been removed from this workspace.`,
@@ -152,6 +147,7 @@ export function WorkspacePage() {
     invitationState.setInvitations((items) =>
       items.filter((item) => item.id !== invitationId),
     );
+    void invitationState.reload();
     if (invitation)
       toast.success("Invitation cancelled", {
         description: `Invitation to ${invitation.email} has been cancelled.`,
@@ -207,6 +203,8 @@ export function WorkspacePage() {
           onRole={setMemberForRole}
           onRemove={setMemberForRemoval}
           onCancel={setInvitationForCancellation}
+          onRetryMembers={() => void memberState.reload()}
+          onRetryInvitations={() => void invitationState.reload()}
         />
       ) : null}
       {tab === "settings" ? (

@@ -11,6 +11,7 @@ interface PendingInvitationsProps {
   loading?: boolean;
   error?: string | null;
   onCancel: (invitation: WorkspaceInvitation) => void;
+  onRetry: () => void;
 }
 
 function formatDate(date: string) {
@@ -61,6 +62,7 @@ export function PendingInvitations({
   loading = false,
   error = null,
   onCancel,
+  onRetry,
 }: PendingInvitationsProps) {
   return (
     <Card>
@@ -90,6 +92,14 @@ export function PendingInvitations({
             </p>
 
             <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+            <Button
+              className="mt-3"
+              variant="outline"
+              size="sm"
+              onClick={onRetry}
+            >
+              Try again
+            </Button>
           </div>
         ) : null}
 
