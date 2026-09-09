@@ -58,9 +58,7 @@ export function RemoveProjectMemberDialog({
               <AlertTriangle className="size-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">
-                Remove {member.user.name} from this project?
-              </h3>
+              <h3 className="text-lg font-semibold">Remove project member?</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 This removes project access only. Their workspace membership
                 will not be affected.
@@ -81,7 +79,7 @@ export function RemoveProjectMemberDialog({
               onClick={() => void submit()}
               disabled={loading}
             >
-              {loading ? "Removing..." : "Remove member"}
+              {loading ? "Removing..." : "Remove"}
             </Button>
           </div>
         </CardContent>

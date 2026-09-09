@@ -1,4 +1,4 @@
-import { ProjectsPage } from "@/components/projects/projects-page";
+import { ProjectDetailPage } from "@/components/projects/project-detail-page";
 
 export default async function ProjectRoutePage({
   params,
@@ -6,5 +6,5 @@ export default async function ProjectRoutePage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  return <ProjectsPage initialProjectId={projectId} />;
+  return <ProjectDetailPage projectId={projectId} />;
 }

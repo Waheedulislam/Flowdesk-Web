@@ -275,13 +275,16 @@ export function ProjectsPage({
           ) : (
             <ProjectDetails
               project={selected}
-              statistics={
-                taskState.loading || taskState.error
-                  ? undefined
-                  : taskStatistics.get(selected.id)
-              }
-              taskStatisticsError={taskState.error}
-              onRetryTaskStatistics={() => void taskState.reload()}
+              tasks={taskState.tasks.filter(
+                (task) => task.projectId === selected.id,
+              )}
+              tasksLoading={taskState.loading}
+              tasksError={taskState.error}
+              onRetryTasks={() => void taskState.reload()}
+              activities={[]}
+              activityLoading={false}
+              activityError={null}
+              onRetryActivity={() => undefined}
               canManage={canManage}
               workspaceRole={activeWorkspace.role}
               onEdit={() => setSettings(true)}

@@ -68,10 +68,10 @@ export function useProjectMembers({
         throw new Error("Your session is no longer valid. Please try again.");
       }
       const response = await addProjectMember(accessToken, projectId, payload);
-      setMembers((current) => [...current, response.data]);
+      await reload();
       return response.data;
     },
-    [accessToken, projectId],
+    [accessToken, projectId, reload],
   );
 
   const updateRole = React.useCallback(
@@ -84,16 +84,10 @@ export function useProjectMembers({
         memberId,
         role,
       );
-      setMembers((current) =>
-        current.map((member) =>
-          member.id === memberId
-            ? { ...member, role: response.data.role }
-            : member,
-        ),
-      );
+      await reload();
       return response.data;
     },
-    [accessToken],
+    [accessToken, reload],
   );
 
   const removeMember = React.useCallback(
@@ -102,11 +96,9 @@ export function useProjectMembers({
         throw new Error("Your session is no longer valid. Please try again.");
       }
       await removeProjectMember(accessToken, memberId);
-      setMembers((current) =>
-        current.filter((member) => member.id !== memberId),
-      );
+      await reload();
     },
-    [accessToken],
+    [accessToken, reload],
   );
 
   return {

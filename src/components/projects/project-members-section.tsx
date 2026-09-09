@@ -166,6 +166,9 @@ export function ProjectMembersSection({
                     <Badge variant={roleVariants[member.role]}>
                       {roleLabels[member.role]}
                     </Badge>
+                    <span className="hidden text-xs text-muted-foreground sm:inline">
+                      Joined {new Date(member.joinedAt).toLocaleDateString()}
+                    </span>
                     {canManage ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger

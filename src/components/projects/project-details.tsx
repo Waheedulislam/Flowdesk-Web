@@ -1,25 +1,38 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ActivityFeed } from "@/components/activity/activity-feed";
 import { ProjectMembersSection } from "@/components/projects/project-members-section";
 import { ProjectStatusBadge } from "@/components/projects/project-status-badge";
 import type { ProjectRecord } from "@/lib/api/project.api";
-import type { ProjectTaskStatistics } from "@/lib/project-task-statistics";
+import type { ActivityLog } from "@/lib/api/activity.api";
+import type { TaskRecord } from "@/lib/api/task.api";
 import type { WorkspaceMemberRole } from "@/lib/api/workspace.api";
 
 export function ProjectDetails({
   project,
-  statistics,
-  taskStatisticsError,
-  onRetryTaskStatistics,
+  tasks,
+  tasksLoading,
+  tasksError,
+  onRetryTasks,
+  activities,
+  activityLoading,
+  activityError,
+  onRetryActivity,
   canManage,
   workspaceRole,
   onEdit,
   onBack,
 }: {
   project: ProjectRecord;
-  statistics?: ProjectTaskStatistics;
-  taskStatisticsError?: string | null;
-  onRetryTaskStatistics?: () => void;
+  tasks: TaskRecord[];
+  tasksLoading: boolean;
+  tasksError: string | null;
+  onRetryTasks: () => void;
+  activities: ActivityLog[];
+  activityLoading: boolean;
+  activityError: string | null;
+  onRetryActivity: () => void;
   canManage: boolean;
   workspaceRole: WorkspaceMemberRole;
   onEdit: () => void;
@@ -63,6 +76,14 @@ export function ProjectDetails({
             label="Last updated"
             value={new Date(project.updatedAt).toLocaleString()}
           />
+          <Info
+            label="Creator"
+            value={project.creator?.name ?? "Unavailable"}
+          />
+          <Info
+            label="Creator email"
+            value={project.creator?.email ?? "Unavailable"}
+          />
         </CardContent>
       </Card>
       <ProjectMembersSection
@@ -72,52 +93,91 @@ export function ProjectDetails({
       />
       <Card>
         <CardHeader>
-          <CardTitle>Tasks, members, and activity</CardTitle>
+          <CardTitle>Project tasks</CardTitle>
         </CardHeader>
         <CardContent>
-          {statistics ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Info label="Tasks" value={String(statistics.totalTasks)} />
-              <Info
-                label="Completed"
-                value={String(statistics.completedTasks)}
-              />
-              <Info label="Progress" value={`${statistics.progress}%`} />
-              <Info
-                label="To do"
-                value={String(statistics.statusCounts.TODO)}
-              />
-              <Info
-                label="In progress"
-                value={String(statistics.statusCounts.IN_PROGRESS)}
-              />
-              <Info
-                label="In review"
-                value={String(statistics.statusCounts.IN_REVIEW)}
-              />
-              <Info label="Done" value={String(statistics.statusCounts.DONE)} />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {taskStatisticsError
-                  ? "Unable to load task statistics."
-                  : "Task statistics are loading."}
-              </p>
-              {taskStatisticsError && onRetryTaskStatistics && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onRetryTaskStatistics}
+          {tasksLoading ? (
+            <p className="text-sm text-muted-foreground">Loading tasks...</p>
+          ) : null}
+          {!tasksLoading && tasksError ? (
+            <ErrorState message={tasksError} onRetry={onRetryTasks} />
+          ) : null}
+          {!tasksLoading && !tasksError && !tasks.length ? (
+            <EmptyState message="No tasks belong to this project yet." />
+          ) : null}
+          {!tasksLoading && !tasksError && tasks.length ? (
+            <div className="divide-y divide-border/70">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  Try again
-                </Button>
-              )}
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{task.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {task.assignee?.name ?? "Unassigned"}
+                      {task.dueDate ? ` - Due ${formatDate(task.dueDate)}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <Badge variant="secondary">{task.priority}</Badge>
+                    <Badge
+                      variant={task.status === "DONE" ? "success" : "info"}
+                    >
+                      {task.status.replaceAll("_", " ")}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
+      <ActivityFeed
+        title="Project activity"
+        activities={activities}
+        loading={activityLoading}
+        error={activityError}
+        emptyMessage="No project-specific activity is available yet."
+        action={
+          activityError ? (
+            <Button variant="outline" size="sm" onClick={onRetryActivity}>
+              Try again
+            </Button>
+          ) : undefined
+        }
+      />
     </div>
+  );
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "Unknown date"
+    : date.toLocaleDateString();
+}
+
+function ErrorState({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-destructive">{message}</p>
+      <Button variant="outline" size="sm" onClick={onRetry}>
+        Try again
+      </Button>
+    </div>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <p className="py-4 text-center text-sm text-muted-foreground">{message}</p>
   );
 }
 
