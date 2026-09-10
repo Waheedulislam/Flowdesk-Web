@@ -135,7 +135,7 @@ function TaskEditorDialogContent({
               <label className="mb-2 block text-sm font-medium">Project</label>
               <select
                 value={form.projectId}
-                disabled={Boolean(task) || saving}
+                disabled={saving}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,

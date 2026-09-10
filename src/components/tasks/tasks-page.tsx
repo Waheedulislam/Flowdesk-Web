@@ -82,6 +82,9 @@ function toTaskItem(
     createdAtValue: task.createdAt,
     updatedAtValue: task.updatedAt,
     dueDateValue: task.dueDate,
+    creatorName: task.creator?.name,
+    creatorEmail: task.creator?.email,
+    creatorAvatar: task.creator?.avatar,
     commentsList: [],
     attachmentsList: [],
   };
@@ -222,6 +225,7 @@ export function TasksPage() {
     setMutationLoading(true);
     try {
       const updatePayload = {
+        projectId: payload.projectId,
         title: payload.title,
         description: payload.description || undefined,
         assignedTo: payload.assignedTo || undefined,

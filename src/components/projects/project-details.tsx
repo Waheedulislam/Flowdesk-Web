@@ -23,6 +23,7 @@ export function ProjectDetails({
   workspaceRole,
   onEdit,
   onBack,
+  onOpenTask,
 }: {
   project: ProjectRecord;
   tasks: TaskRecord[];
@@ -37,6 +38,7 @@ export function ProjectDetails({
   workspaceRole: WorkspaceMemberRole;
   onEdit: () => void;
   onBack: () => void;
+  onOpenTask?: (taskId: string) => void;
 }) {
   return (
     <div className="space-y-6">
@@ -110,7 +112,19 @@ export function ProjectDetails({
               {tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                  className={`flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between ${onOpenTask ? "cursor-pointer rounded-lg px-2 hover:bg-accent/40" : ""}`}
+                  onClick={() => onOpenTask?.(task.id)}
+                  role={onOpenTask ? "link" : undefined}
+                  tabIndex={onOpenTask ? 0 : undefined}
+                  onKeyDown={(event) => {
+                    if (
+                      onOpenTask &&
+                      (event.key === "Enter" || event.key === " ")
+                    ) {
+                      event.preventDefault();
+                      onOpenTask(task.id);
+                    }
+                  }}
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{task.title}</p>

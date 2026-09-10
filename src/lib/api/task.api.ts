@@ -44,6 +44,11 @@ export type TaskRecord = {
   order: number;
   createdAt: string;
   updatedAt: string;
+  project?: {
+    id: string;
+    workspaceId: string;
+    name: string;
+  };
   creator?: TaskUser;
   assignee?: TaskUser | null;
 };
@@ -59,6 +64,7 @@ export type CreateTaskPayload = {
 export type UpdateTaskPayload = Partial<
   Pick<
     TaskRecord,
+    | "projectId"
     | "title"
     | "description"
     | "assignedTo"

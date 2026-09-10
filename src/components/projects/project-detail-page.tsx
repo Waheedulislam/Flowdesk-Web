@@ -143,6 +143,9 @@ export function ProjectDetailPage({ projectId }: { projectId: string }) {
           workspaceRole={activeWorkspace.role}
           onEdit={() => setSettings(true)}
           onBack={() => router.push("/projects")}
+          onOpenTask={(taskId) =>
+            router.push(`/tasks/${encodeURIComponent(taskId)}`)
+          }
         />
       )}
       <DeleteProjectDialog

@@ -36,6 +36,9 @@ export interface TaskItem {
   createdAtValue: string;
   updatedAtValue: string;
   dueDateValue: string | null;
+  creatorName?: string;
+  creatorEmail?: string;
+  creatorAvatar?: string | null;
   commentsList: TaskComment[];
   attachmentsList: TaskAttachment[];
 }

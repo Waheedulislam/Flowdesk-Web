@@ -291,6 +291,9 @@ export function ProjectsPage({
               onBack={() =>
                 initialProjectId ? router.push("/projects") : setSelected(null)
               }
+              onOpenTask={(taskId) =>
+                router.push(`/tasks/${encodeURIComponent(taskId)}`)
+              }
             />
           )}
         </div>

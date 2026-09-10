@@ -19,6 +19,7 @@ interface TaskDetailsProps {
   onOpenChange: (open: boolean) => void;
   onEdit: (task: TaskItem) => void;
   onDeleteRequest: (task: TaskItem) => void;
+  canManage?: boolean;
   currentUserId: string | null;
   comments: TaskCommentRecord[];
   files: TaskFileRecord[];
@@ -38,6 +39,7 @@ export function TaskDetails({
   onOpenChange,
   onEdit,
   onDeleteRequest,
+  canManage = true,
   currentUserId,
   comments,
   files,
@@ -144,6 +146,26 @@ export function TaskDetails({
                     Project
                   </p>
                   <p className="mt-1 font-medium">{task.project}</p>
+                </div>
+                <div className="rounded-lg border border-border/70 bg-background/70 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Creator
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <Avatar
+                      name={task.creatorName ?? "Unknown creator"}
+                      src={task.creatorAvatar ?? undefined}
+                      className="size-6"
+                    />
+                    <p className="font-medium">
+                      {task.creatorName ?? "Unknown creator"}
+                    </p>
+                  </div>
+                  {task.creatorEmail ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {task.creatorEmail}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="rounded-lg border border-border/70 bg-background/70 p-3">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -344,16 +366,21 @@ export function TaskDetails({
             </CardContent>
           </Card>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => onEdit(task)}>
-              <PencilLine className="size-4" />
-              Edit
-            </Button>
-            <Button variant="destructive" onClick={() => onDeleteRequest(task)}>
-              <Trash2 className="size-4" />
-              Delete
-            </Button>
-          </div>
+          {canManage ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={() => onEdit(task)}>
+                <PencilLine className="size-4" />
+                Edit
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => onDeleteRequest(task)}
+              >
+                <Trash2 className="size-4" />
+                Delete
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
