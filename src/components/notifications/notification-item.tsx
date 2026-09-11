@@ -45,6 +45,16 @@ const presentation: Record<
     tone: "warning",
     label: "Workspace invitation",
   },
+  WORKSPACE_MEMBER_REMOVED: {
+    icon: UserMinus,
+    tone: "destructive",
+    label: "Workspace member removed",
+  },
+  WORKSPACE_ROLE_UPDATED: {
+    icon: ShieldCheck,
+    tone: "warning",
+    label: "Workspace role updated",
+  },
   PROJECT_CREATED: {
     icon: FolderPlus,
     tone: "success",
@@ -54,6 +64,16 @@ const presentation: Record<
     icon: FolderKanban,
     tone: "info",
     label: "Project updated",
+  },
+  PROJECT_DELETED: {
+    icon: Trash2,
+    tone: "destructive",
+    label: "Project deleted",
+  },
+  PROJECT_MEMBER_ADDED: {
+    icon: Users,
+    tone: "success",
+    label: "Project member added",
   },
   PROJECT_MEMBER_REMOVED: {
     icon: UserMinus,
