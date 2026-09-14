@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { RequireAuthentication } from "@/components/auth/route-guard";
 import { NotificationProvider } from "@/context/notification-context";
+import { SocketProvider } from "@/context/SocketContext";
 import { WorkspaceProvider } from "@/context/workspace-context";
 
 /**
@@ -17,7 +18,9 @@ export default function AppLayout({
     <RequireAuthentication>
       <NotificationProvider>
         <WorkspaceProvider>
-          <AppShell>{children}</AppShell>
+          <SocketProvider>
+            <AppShell>{children}</AppShell>
+          </SocketProvider>
         </WorkspaceProvider>
       </NotificationProvider>
     </RequireAuthentication>
