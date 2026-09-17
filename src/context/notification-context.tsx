@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { useAuth } from "@/context/auth-context";
+import { socket } from "@/lib/socket";
 import {
   deleteNotification as deleteNotificationRequest,
   getNotifications,
@@ -27,6 +28,11 @@ type NotificationContextValue = {
 const NotificationContext =
   React.createContext<NotificationContextValue | null>(null);
 
+type NotificationOverride = {
+  notification: NotificationRecord | null;
+  version: number;
+};
+
 function sortNotifications(notifications: NotificationRecord[]) {
   return [...notifications].sort(
     (left, right) =>
@@ -39,7 +45,7 @@ export function NotificationProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { accessToken, isReady } = useAuth();
+  const { accessToken, isReady, user } = useAuth();
   const [notifications, setNotifications] = React.useState<
     NotificationRecord[]
   >([]);
@@ -49,9 +55,15 @@ export function NotificationProvider({
   const [pendingIds, setPendingIds] = React.useState<Set<string>>(new Set());
   const requestId = React.useRef(0);
   const pendingIdsRef = React.useRef(new Set<string>());
+  const notificationOverridesRef = React.useRef(
+    new Map<string, NotificationOverride>(),
+  );
+  const notificationOverrideVersionRef = React.useRef(0);
+  const hasConnectedRef = React.useRef(false);
 
   const reload = React.useCallback(async () => {
     const currentRequestId = ++requestId.current;
+    const overrideVersionAtStart = notificationOverrideVersionRef.current;
 
     if (!isReady || !accessToken) {
       setNotifications([]);
@@ -60,6 +72,7 @@ export function NotificationProvider({
       pendingIdsRef.current.clear();
       setPendingIds(new Set());
       setIsMarkingAllAsRead(false);
+      notificationOverridesRef.current.clear();
       return;
     }
 
@@ -69,7 +82,25 @@ export function NotificationProvider({
     try {
       const response = await getNotifications(accessToken);
       if (requestId.current !== currentRequestId) return;
-      setNotifications(sortNotifications(response.data));
+      const nextNotifications = new Map(
+        response.data.map((notification) => [notification.id, notification]),
+      );
+
+      for (const [
+        notificationId,
+        override,
+      ] of notificationOverridesRef.current) {
+        if (override.version > overrideVersionAtStart) {
+          if (override.notification) {
+            nextNotifications.set(notificationId, override.notification);
+          } else {
+            nextNotifications.delete(notificationId);
+          }
+        }
+        notificationOverridesRef.current.delete(notificationId);
+      }
+
+      setNotifications(sortNotifications([...nextNotifications.values()]));
     } catch (cause) {
       if (requestId.current !== currentRequestId) return;
       setError(
@@ -81,6 +112,43 @@ export function NotificationProvider({
       if (requestId.current === currentRequestId) setIsLoading(false);
     }
   }, [accessToken, isReady]);
+
+  React.useEffect(() => {
+    if (!isReady || !accessToken || !user) return;
+
+    const handleNewNotification = (notification: NotificationRecord) => {
+      if (
+        !notification ||
+        typeof notification.id !== "string" ||
+        notification.userId !== user.id
+      ) {
+        return;
+      }
+
+      notificationOverridesRef.current.set(notification.id, {
+        notification,
+        version: ++notificationOverrideVersionRef.current,
+      });
+      setNotifications((current) => {
+        if (current.some((item) => item.id === notification.id)) return current;
+        return sortNotifications([notification, ...current]);
+      });
+    };
+
+    const handleConnect = () => {
+      if (hasConnectedRef.current) void reload();
+      hasConnectedRef.current = true;
+    };
+
+    socket.on("notification:new", handleNewNotification);
+    socket.on("connect", handleConnect);
+    if (socket.connected) hasConnectedRef.current = true;
+
+    return () => {
+      socket.off("notification:new", handleNewNotification);
+      socket.off("connect", handleConnect);
+    };
+  }, [accessToken, isReady, reload, user]);
 
   React.useEffect(() => {
     const timeoutId = window.setTimeout(() => void reload(), 0);
@@ -117,6 +185,12 @@ export function NotificationProvider({
           notificationId,
         );
         if (requestId.current === currentRequestId) {
+          if (notificationOverridesRef.current.has(notificationId)) {
+            notificationOverridesRef.current.set(notificationId, {
+              notification: response.data,
+              version: ++notificationOverrideVersionRef.current,
+            });
+          }
           setNotifications((current) =>
             current.map((item) =>
               item.id === notificationId ? response.data : item,
@@ -144,6 +218,17 @@ export function NotificationProvider({
     try {
       await markAllNotificationsAsRead(accessToken);
       if (requestId.current === currentRequestId) {
+        for (const [
+          notificationId,
+          override,
+        ] of notificationOverridesRef.current) {
+          if (override.notification && !override.notification.isRead) {
+            notificationOverridesRef.current.set(notificationId, {
+              notification: { ...override.notification, isRead: true },
+              version: ++notificationOverrideVersionRef.current,
+            });
+          }
+        }
         setNotifications((current) =>
           current.map((item) => ({ ...item, isRead: true })),
         );
@@ -162,6 +247,12 @@ export function NotificationProvider({
       try {
         await deleteNotificationRequest(accessToken, notificationId);
         if (requestId.current === currentRequestId) {
+          if (notificationOverridesRef.current.has(notificationId)) {
+            notificationOverridesRef.current.set(notificationId, {
+              notification: null,
+              version: ++notificationOverrideVersionRef.current,
+            });
+          }
           setNotifications((current) =>
             current.filter((item) => item.id !== notificationId),
           );
