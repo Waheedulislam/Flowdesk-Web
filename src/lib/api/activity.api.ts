@@ -35,6 +35,12 @@ export type ActivityActor = {
   name: string;
   email: string;
   avatar: string | null;
+  role?: string;
+};
+
+export type ActivityProject = {
+  id: string;
+  name: string;
 };
 
 export type ActivityLog = {
@@ -45,11 +51,16 @@ export type ActivityLog = {
   entityId: string;
   metadata: ActivityMetadata;
   createdAt: string;
+  description?: string;
+  project?: ActivityProject | null;
 };
 
 type RawActivityLog = Omit<ActivityLog, "actor" | "metadata"> & {
-  actor?: ActivityActor | null;
-  user?: ActivityActor | null;
+  actor?: Partial<ActivityActor> | null;
+  user?: Partial<ActivityActor> | null;
+  userId?: string | null;
+  role?: string | null;
+  project?: ActivityProject | null;
   metadata?: ActivityMetadata;
 };
 
@@ -84,16 +95,21 @@ export function getWorkspaceActivity(
   ).then((response) => ({
     ...response,
     meta: response.meta as ActivityPagination,
-    data: response.data.map((activity) => ({
-      ...activity,
-      actor: activity.actor ??
-        activity.user ?? {
-          id: "",
-          name: "Workspace member",
-          email: "",
-          avatar: null,
+    data: response.data.map((activity) => {
+      const actor = activity.actor ?? activity.user;
+
+      return {
+        ...activity,
+        actor: {
+          id: actor?.id ?? activity.userId ?? "",
+          name: actor?.name ?? "Workspace member",
+          email: actor?.email ?? "",
+          avatar: actor?.avatar ?? null,
+          role:
+            actor?.role ?? activity.user?.role ?? activity.role ?? undefined,
         },
-      metadata: activity.metadata ?? null,
-    })),
+        metadata: activity.metadata ?? null,
+      };
+    }),
   }));
 }

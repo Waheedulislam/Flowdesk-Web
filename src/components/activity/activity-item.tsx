@@ -22,7 +22,7 @@ const actionIcons: Partial<Record<ActivityAction, LucideIcon>> = {
   FILE_DELETE: FileText,
 };
 
-function metadataValue(activity: ActivityLog, key: string) {
+export function metadataValue(activity: ActivityLog, key: string) {
   const value = activity.metadata?.[key];
   return typeof value === "string" || typeof value === "number"
     ? String(value)
@@ -30,6 +30,8 @@ function metadataValue(activity: ActivityLog, key: string) {
 }
 
 export function getActivityMessage(activity: ActivityLog) {
+  if (activity.description) return activity.description;
+
   const actor = activity.actor.name;
   const projectName = metadataValue(activity, "projectName");
   const memberName = metadataValue(activity, "memberName");
@@ -88,9 +90,13 @@ export function formatActivityTime(value: string) {
 export function ActivityItem({
   activity,
   compact = false,
+  actorRole,
+  projectName,
 }: {
   activity: ActivityLog;
   compact?: boolean;
+  actorRole?: string;
+  projectName?: string;
 }) {
   const Icon = actionIcons[activity.action] ?? Activity;
 
@@ -101,10 +107,30 @@ export function ActivityItem({
         src={activity.actor.avatar ?? undefined}
         className={compact ? "size-8" : "size-10"}
       />
-      <div className="min-w-0">
-        <p className="text-sm leading-snug text-foreground">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {activity.actor.name}
+          </p>
+          {actorRole ? (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+              {actorRole}
+            </span>
+          ) : null}
+        </div>
+        {!compact ? (
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {activity.actor.email || "Email unavailable"}
+          </p>
+        ) : null}
+        <p className="mt-2 text-sm leading-snug text-foreground">
           {getActivityMessage(activity)}
         </p>
+        {projectName ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Project: {projectName}
+          </p>
+        ) : null}
         <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
           <Icon className="size-4" />
           <span>{formatActivityTime(activity.createdAt)}</span>

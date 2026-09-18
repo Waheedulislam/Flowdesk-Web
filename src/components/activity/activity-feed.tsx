@@ -12,6 +12,8 @@ export function ActivityFeed({
   error,
   compact = false,
   emptyMessage = "No activity yet for this workspace.",
+  actorRoles,
+  projectNames,
 }: {
   activities: ActivityLog[];
   title?: string;
@@ -20,6 +22,8 @@ export function ActivityFeed({
   error?: string | null;
   compact?: boolean;
   emptyMessage?: string;
+  actorRoles?: Record<string, string>;
+  projectNames?: Record<string, string>;
 }) {
   return (
     <Card className="h-full">
@@ -45,6 +49,8 @@ export function ActivityFeed({
                 key={activity.id}
                 activity={activity}
                 compact={compact}
+                actorRole={actorRoles?.[activity.actor.id]}
+                projectName={projectNames?.[activity.id]}
               />
             ))}
           </ul>
