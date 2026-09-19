@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { removeAvatar, updateProfile, uploadAvatar } from "@/lib/api/auth.api";
 import { RoleBadge } from "@/components/roles/role-badge";
+import { Alert } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +42,12 @@ export default function ProfilePage() {
     null,
   );
   const [avatarError, setAvatarError] = React.useState<string | null>(null);
+  const [removeAvatarError, setRemoveAvatarError] = React.useState<
+    string | null
+  >(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = React.useState(false);
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!selectedPreview) return;
@@ -51,6 +57,20 @@ export default function ProfilePage() {
       }
     };
   }, [selectedPreview]);
+
+  React.useEffect(() => {
+    if (!isRemoveDialogOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsRemoveDialogOpen(false);
+        setRemoveAvatarError(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isRemoveDialogOpen]);
 
   if (!user) {
     return (
@@ -154,14 +174,26 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleAvatarRemove() {
+  function handleOpenRemoveDialog() {
+    setRemoveAvatarError(null);
+    setIsRemoveDialogOpen(true);
+  }
+
+  function handleCloseRemoveDialog() {
+    setIsRemoveDialogOpen(false);
+    setRemoveAvatarError(null);
+  }
+
+  async function handleConfirmAvatarRemove() {
     if (!accessToken) {
-      setAvatarError("Your session is no longer valid. Please sign in again.");
+      setRemoveAvatarError(
+        "Your session is no longer valid. Please sign in again.",
+      );
       return;
     }
 
-    setAvatarError(null);
-    setIsUploadingAvatar(true);
+    setRemoveAvatarError(null);
+    setIsRemovingAvatar(true);
 
     try {
       const response = await removeAvatar(accessToken);
@@ -172,15 +204,16 @@ export default function ProfilePage() {
       setSelectedFile(null);
       setSelectedPreview(null);
       toast.success("Profile photo removed successfully");
+      handleCloseRemoveDialog();
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "We couldn't remove your avatar. Please try again.";
-      setAvatarError(message);
+      setRemoveAvatarError(message);
       toast.error("Couldn't remove your avatar", { description: message });
     } finally {
-      setIsUploadingAvatar(false);
+      setIsRemovingAvatar(false);
     }
   }
 
@@ -272,8 +305,8 @@ export default function ProfilePage() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={handleAvatarRemove}
-                      disabled={isUploadingAvatar}
+                      onClick={handleOpenRemoveDialog}
+                      disabled={isUploadingAvatar || isRemovingAvatar}
                     >
                       Remove avatar
                     </Button>
@@ -368,6 +401,72 @@ export default function ProfilePage() {
           </Button>
         </CardContent>
       </Card>
+
+      {isRemoveDialogOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm"
+          onClick={handleCloseRemoveDialog}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-avatar-dialog-title"
+            aria-describedby="remove-avatar-dialog-description"
+            className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="space-y-3">
+              <h2
+                id="remove-avatar-dialog-title"
+                className="text-lg font-semibold"
+              >
+                Remove profile photo?
+              </h2>
+              <p
+                id="remove-avatar-dialog-description"
+                className="text-sm text-muted-foreground"
+              >
+                Are you sure you want to remove your profile photo? This action
+                will restore your default avatar.
+              </p>
+            </div>
+
+            {removeAvatarError ? (
+              <div className="mt-4">
+                <Alert variant="destructive" title="Unable to remove photo">
+                  {removeAvatarError}
+                </Alert>
+              </div>
+            ) : null}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseRemoveDialog}
+                disabled={isRemovingAvatar}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleConfirmAvatarRemove}
+                disabled={isRemovingAvatar}
+              >
+                {isRemovingAvatar ? (
+                  <>
+                    <Spinner />
+                    Removing…
+                  </>
+                ) : (
+                  "Remove"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
